@@ -1,0 +1,2 @@
+# sc-number-game-base
+
