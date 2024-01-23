@@ -25,6 +25,7 @@
   "type": "module",
   "license": "ISC",
   "dependencies": {
+    "sc-common": "1.8.1",
     "sc-game-base": "^5.0.0"
   },
   "devDependencies": {

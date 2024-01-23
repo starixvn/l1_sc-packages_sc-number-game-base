@@ -1,0 +1,4 @@
+[submodule "types"]
+	path = types
+	url = ../sc-game-base-type
+	branch = main
