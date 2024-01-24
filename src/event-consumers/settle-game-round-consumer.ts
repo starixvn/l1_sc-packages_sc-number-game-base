@@ -29,10 +29,10 @@ export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundC
             });
         } else {
             const filter = { id: roundId };
-            let update = { $push: { result: result, settlementResult: settlementResult }, $set: { latestDrawId: drawId } };
+            const update = { $push: { result: result, settlementResult: settlementResult }, $set: { latestDrawId: drawId } };
 
             if (drawId % (this.definition as GameDefinition).numberOfTurnsPerRound === 0) {
-                update = { ...update, ...{ ended: true } };
+                update.$set = { ...update.$set, ...{ ended: true } };
             }
 
             const opts = { new: true };
