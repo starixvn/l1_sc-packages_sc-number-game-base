@@ -2,6 +2,14 @@ import { BaseEventConsumers } from "sc-game-base/src/core";
 import GameData from "../game-data";
 import GameDefinition from "../game-definition";
 
+export type FinishDraw = {
+    result: any;
+    settlementResult: any;
+    roundId: number;
+    drawId: number;
+    time: Date;
+};
+
 export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundConsumer {
     async settleRound() {
         let roundSettled: any;
@@ -32,23 +40,20 @@ export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundC
         }
 
         if (roundSettled) {
-            const finish = {
+            const finish: FinishDraw = {
                 result: roundSettled.result,
                 settlementResult: roundSettled.settlementResult,
                 roundId: roundSettled.id,
                 drawId: roundSettled.latestDrawId,
-                winningPlayers: this.gameData.winningPlayers,
                 time: new Date(),
             };
 
-            this.roundResultPublisher.publishRoundResult(finish);
-            (this.gameData as GameData).drawId = finish.drawId + 1;
-
-            if (drawId % 4 === 0) {
-                this.gameData.roundId = finish.roundId + 1;
-            }
-
             await this.settleBets(finish);
+
+            this.updateNextDrawData(finish);
+
+            this.roundResultPublisher.publishRoundResult(finish);
+
             this.roundResultPublisher.publishWinners(roundId, this.gameData.winningPlayers);
         }
     }
@@ -57,15 +62,15 @@ export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundC
         return this.betsRepository.find({ drawId: drawId }).exec();
     }
 
-    async settleBets({ result, settlementResult, drawId, time }: any) {
-        const bets = await this.queryBets(drawId);
+    async settleBets(finish: FinishDraw) {
+        const bets = await this.queryBets(finish.drawId);
 
         if (bets?.length) {
-            const odds = this.gameData.gameConfigs.odds;
+            const odds = (this.gameData as GameData).odds;
 
             await Promise.all(
                 bets.map(async (bet: any) => {
-                    const settlementDrawResult = settlementResult.find((s: any) => s.drawId === bet.drawId);
+                    const settlementDrawResult = finish.settlementResult.find((s: any) => s.drawId === bet.drawId);
 
                     const betResult = this.calculateBetResult(settlementDrawResult, bet, odds);
 
@@ -74,14 +79,22 @@ export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundC
                     bet.paid = true;
 
                     await bet.save();
-                    await this.callEndGame(bet, drawId, time, betResult);
+                    await this.callEndGame(bet, finish.drawId, finish.time, betResult);
 
                     this.captureBetResult(bet.uid, betResult, bet.rate);
                     await this.userBetResultPublisher.publish(bet.uid, betResult);
                 })
             );
-
-            this.gameData.gameConfigs.odds = (this.definition as GameDefinition).getOdds(result);
         }
+    }
+
+    updateNextDrawData(finish: FinishDraw) {
+        (this.gameData as GameData).drawId = finish.drawId + 1;
+
+        if (finish.drawId % (this.definition as GameDefinition).numberOfTurnsPerRound === 0) {
+            this.gameData.roundId = finish.roundId + 1;
+        }
+
+        (this.gameData as GameData).odds = (this.definition as GameDefinition).getOdds(finish.result);
     }
 }
