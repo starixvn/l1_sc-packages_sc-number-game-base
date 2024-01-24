@@ -5,7 +5,6 @@ import GameDefinition from "../game-definition";
 export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundConsumer {
     async settleRound() {
         let roundSettled: any;
-
         const result = this.generateResult();
         const settlementResult = this.definition.settle(result);
         const { roundId, drawId, exchangeRates } = this.gameData as GameData;
@@ -13,31 +12,36 @@ export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundC
         if (drawId % (this.definition as GameDefinition).numberOfTurnsPerRound === 1) {
             roundSettled = await this.roundsRepository.create({
                 id: roundId,
-                drawIds: [],
-                result,
-                settlementResult,
+                latestDrawId: drawId,
+                result: [result],
+                settlementResult: [settlementResult],
                 time: new Date(),
                 exchangeRateId: exchangeRates.exId,
+                ended: false,
             });
         } else {
             const filter = { id: roundId };
-            const update = { $push: { drawIds: drawId }, $set: { time: new Date() } };
+            let update = { $push: { result: result, settlementResult: settlementResult }, $set: { latestDrawId: drawId } };
+
+            if (drawId % (this.definition as GameDefinition).numberOfTurnsPerRound === 0) {
+                update = { ...update, ...{ ended: true } };
+            }
+
             const opts = { new: true };
             roundSettled = await this.roundsRepository.findOneAndUpdate(filter, update, opts);
         }
 
         if (roundSettled) {
             const finish = {
-                result,
-                settlementResult,
+                result: roundSettled.result,
+                settlementResult: roundSettled.settlementResult,
                 roundId: roundSettled.id,
-                drawId: drawId,
+                drawId: roundSettled.latestDrawId,
                 winningPlayers: this.gameData.winningPlayers,
-                time: roundSettled.time,
+                time: new Date(),
             };
 
             this.roundResultPublisher.publishRoundResult(finish);
-
             (this.gameData as GameData).drawId = finish.drawId + 1;
 
             if (drawId % 4 === 0) {
@@ -45,20 +49,19 @@ export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundC
             }
 
             await this.settleBets(finish);
-
             this.roundResultPublisher.publishWinners(roundId, this.gameData.winningPlayers);
         }
     }
 
-    queryNumberGameBets(roundId: number, drawId: number) {
-        return this.betsRepository.find({ roundId, drawId }).exec();
+    queryBets(drawId: number) {
+        return this.betsRepository.find({ drawId: drawId }).exec();
     }
 
-    async settleBets({ result, settlementResult, roundId, drawId, time }: any) {
-        const bets = await this.queryNumberGameBets(roundId, drawId);
+    async settleBets({ result, settlementResult, drawId, time }: any) {
+        const bets = await this.queryBets(drawId);
 
         if (bets?.length) {
-            const odds = (this.definition as GameDefinition).getOdds(result);
+            const odds = this.gameData.gameConfigs.odds;
 
             await Promise.all(
                 bets.map(async (bet: any) => {
@@ -77,6 +80,8 @@ export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundC
                     await this.userBetResultPublisher.publish(bet.uid, betResult);
                 })
             );
+
+            this.gameData.gameConfigs.odds = (this.definition as GameDefinition).getOdds(result);
         }
     }
 }
