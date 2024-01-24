@@ -15,7 +15,7 @@ export default class GameDefinition extends BaseGameDefinition {
         generateResult: Function,
         settle: Function,
         generateRawResultForHash: Function,
-        getOdds: Function
+        getProbabilities: Function
     ) {
         super(
             { id, name, durations, choices, choicesMapper, hedgeBetGroups, numberOfRoundHistory, historyPageSize },
@@ -24,10 +24,10 @@ export default class GameDefinition extends BaseGameDefinition {
             generateRawResultForHash
         );
         this.numberOfTurnsPerRound = numberOfTurnsPerRound;
-        this.getOdds = getOdds;
+        this.getProbabilities = getProbabilities;
     }
     numberOfTurnsPerRound: number;
-    getOdds: Function;
+    getProbabilities: Function;
 }
 export type Duration = {
     wholeRound: number;

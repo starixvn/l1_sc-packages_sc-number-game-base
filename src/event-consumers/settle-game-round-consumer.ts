@@ -1,6 +1,7 @@
 import { BaseEventConsumers } from "sc-game-base/src/core";
 import GameData from "../game-data";
 import GameDefinition from "../game-definition";
+import { getFilterObjectWithAllowedKeys, getBetOdds } from "../helpers";
 
 export type FinishDraw = {
     result: any;
@@ -70,7 +71,9 @@ export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundC
 
             await Promise.all(
                 bets.map(async (bet: any) => {
-                    const settlementDrawResult = finish.settlementResult.find((s: any) => s.drawId === bet.drawId);
+                    const settlementDrawData = finish.settlementResult.find((s: any) => s.drawId === bet.drawId);
+
+                    const settlementDrawResult = getFilterObjectWithAllowedKeys(settlementDrawData, this.definition.choices);
 
                     const betResult = this.calculateBetResult(settlementDrawResult, bet, odds);
 
@@ -95,6 +98,8 @@ export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundC
             this.gameData.roundId = finish.roundId + 1;
         }
 
-        (this.gameData as GameData).odds = (this.definition as GameDefinition).getOdds(finish.result);
+        const probabilities = (this.definition as GameDefinition).getProbabilities(finish.result);
+
+        (this.gameData as GameData).odds = getBetOdds(probabilities, this.gameData.gameConfigs.odds);
     }
 }
