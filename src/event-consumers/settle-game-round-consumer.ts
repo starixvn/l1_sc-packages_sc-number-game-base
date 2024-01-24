@@ -9,6 +9,7 @@ export type FinishDraw = {
     roundId: number;
     drawId: number;
     time: Date;
+    ended: boolean;
 };
 
 export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundConsumer {
@@ -47,6 +48,7 @@ export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundC
                 roundId: roundSettled.id,
                 drawId: roundSettled.latestDrawId,
                 time: new Date(),
+                ended: roundSettled.ended,
             };
 
             await this.settleBets(finish);
@@ -98,7 +100,9 @@ export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundC
             this.gameData.roundId = finish.roundId + 1;
         }
 
-        const probabilities = (this.definition as GameDefinition).getProbabilities(finish.result);
+        const probabilities = finish.ended
+            ? (this.definition as GameDefinition).getProbabilities()
+            : (this.definition as GameDefinition).getProbabilities(finish.result);
 
         (this.gameData as GameData).odds = getBetOdds(probabilities, this.gameData.gameConfigs.odds);
     }
