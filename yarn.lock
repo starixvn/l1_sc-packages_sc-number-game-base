@@ -8154,10 +8154,10 @@ process@^0.10.0:
   resolved "http://npm.lumigame.com/process/-/process-0.10.1.tgz#842457cc51cfed72dc775afeeafb8c6034372725"
   integrity sha1-hCRXzFHP7XLcd1r+6vuMYDQ3JyU=
 
-prom-client@11.2.1:
-  version "11.2.1"
-  resolved "http://npm.lumigame.com/prom-client/-/prom-client-11.2.1.tgz#486e7817de9b1d43c0a12aee26fc68830f4d1b16"
-  integrity sha512-7VwtjrkQS50NvDoeYNn2z6wzXB5BMGzUlmMOeLPaITtJsTVXnPywRta7QFiV4pKr0fbRx9oDfUcx1xibabjSAg==
+prom-client@^11.2.1:
+  version "11.5.3"
+  resolved "http://npm.lumigame.com/prom-client/-/prom-client-11.5.3.tgz#5fedfce1083bac6c2b223738e966d0e1643756f8"
+  integrity sha512-iz22FmTbtkyL2vt0MdDFY+kWof+S9UB/NACxSn2aJcewtw+EERsen0urSkZ2WrHseNdydsvcxCTAnPcSMZZv4Q==
   dependencies:
     tdigest "^0.1.1"
 
@@ -9076,10 +9076,13 @@ socket.io-parser@~4.2.1, socket.io-parser@~4.2.4:
     "@socket.io/component-emitter" "~3.1.0"
     debug "~4.3.1"
 
-socket.io-prom-metrics@^1.0.3:
-  version "1.0.14"
-  resolved "http://npm.lumigame.com/socket.io-prom-metrics/-/socket.io-prom-metrics-1.0.14.tgz#5a913cdaff5cc2ab9cd8d55471fa3f4006a59fa7"
-  integrity sha512-gkSTYlTENDo3TjA51DzM0AY5r2wQkLdRrvCmyfhdIYnd8Hy/RG8wvFzjWCeNACvPhb/p7ESllXilGO5T2C/rBg==
+socket.io-prom-metrics@1.0.3, socket.io-prom-metrics@^1.0.3:
+  version "1.0.3"
+  resolved "http://npm.lumigame.com/socket.io-prom-metrics/-/socket.io-prom-metrics-1.0.3.tgz#c4865d821814a19a254f02caca3ac55fae58d907"
+  integrity sha512-a4WU+9kGIuWK8oSlAQCV6TJhAh03ssLollbi3hZ7kleuGaGrpnGL9EjTk64PikOlEFV6rhXObSTsQhvR7t70Mw==
+  dependencies:
+    prom-client "^11.2.1"
+    socket.io "^4.1.3"
 
 socket.io@4.6.1:
   version "4.6.1"
@@ -9093,7 +9096,7 @@ socket.io@4.6.1:
     socket.io-adapter "~2.5.2"
     socket.io-parser "~4.2.1"
 
-socket.io@^4.1.2, socket.io@^4.5.4:
+socket.io@^4.1.2, socket.io@^4.1.3, socket.io@^4.5.4:
   version "4.7.4"
   resolved "http://npm.lumigame.com/socket.io/-/socket.io-4.7.4.tgz#2401a2d7101e4bdc64da80b140d5d8b6a8c7738b"
   integrity sha512-DcotgfP1Zg9iP/dH9zvAQcWrE0TtbMVwXmlV4T4mqsvY+gw+LqUGPfx2AoVyRk0FLME+GQhufDMyacFmw7ksqw==

@@ -57,8 +57,6 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
 
             this.updateNextDrawData(finish);
 
-            this.roundResultPublisher.publishRoundResult(finish);
-
             (this.roundResultPublisher as RoundResultPublisher).publishWinners(roundId, this.gameData.winningPlayers, drawId);
         }
     }

@@ -115,12 +115,12 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
         });
 
         const { amount, betChoices, freeBet, drawId } = payload;
-        const name = player.profile.name;
 
         if (!this.validateBetRequest(player, betChoices, amount, freeBet, drawId)) {
             return;
         }
 
+        const name = player.profile.name;
         if (!this.gameData.ingame[name]) {
             const newPlayer = {
                 name: player.profile.name,
