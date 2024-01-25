@@ -1,7 +1,8 @@
-import { BaseEventConsumers } from "sc-game-base/src/core";
+import { Table } from "sc-game-base";
 import GameData from "../game-data";
 import GameDefinition from "../game-definition";
 import { getFilterObjectWithAllowedKeys, getBetOdds } from "../helpers";
+import { RoundResultPublisher } from "../event-publishers";
 
 export type FinishDraw = {
     result: any;
@@ -12,7 +13,7 @@ export type FinishDraw = {
     ended: boolean;
 };
 
-export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundConsumer {
+export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGameRoundConsumer {
     async settleRound() {
         let roundSettled: any;
         const result = this.generateResult();
@@ -56,12 +57,17 @@ export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundC
 
             this.updateNextDrawData(finish);
 
-            this.roundResultPublisher.publishWinners(roundId, this.gameData.winningPlayers);
+            this.roundResultPublisher.publishRoundResult(finish);
+
+            (this.roundResultPublisher as RoundResultPublisher).publishWinners(roundId, this.gameData.winningPlayers, drawId);
         }
     }
 
-    queryBets(drawId: number) {
-        return this.betsRepository.find({ drawId: drawId }).exec();
+    async queryBets(drawId: number) {
+        const realPlayerBets = await this.betsRepository.find({ drawId: drawId }).exec();
+        const botBets = await this.tempBetsRepository.find({ drawId: drawId }).exec();
+
+        return realPlayerBets.concat(botBets);
     }
 
     async settleBets(finish: FinishDraw) {
