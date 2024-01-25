@@ -50,12 +50,11 @@ export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundC
                 time: new Date(),
                 ended: roundSettled.ended,
             };
+            this.roundResultPublisher.publishRoundResult(finish);
 
             await this.settleBets(finish);
 
             this.updateNextDrawData(finish);
-
-            this.roundResultPublisher.publishRoundResult(finish);
 
             this.roundResultPublisher.publishWinners(roundId, this.gameData.winningPlayers);
         }
@@ -100,9 +99,7 @@ export class SettleGameRoundConsumer extends BaseEventConsumers.SettleGameRoundC
             this.gameData.roundId = finish.roundId + 1;
         }
 
-        const probabilities = finish.ended
-            ? (this.definition as GameDefinition).getProbabilities()
-            : (this.definition as GameDefinition).getProbabilities(finish.result);
+        const probabilities = (this.definition as GameDefinition).getProbabilities(finish.ended ? [] : finish.result);
 
         (this.gameData as GameData).odds = getBetOdds(probabilities, this.gameData.gameConfigs.odds);
     }

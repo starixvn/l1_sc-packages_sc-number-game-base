@@ -54,7 +54,7 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
                 notice: this.getNoticeObj(notices.maxBetOfAnyChoiceReached),
             },
             {
-                failure: this.anyChoiceBelowMinBet(betChoices, betTracks, minBet),
+                failure: this.anyChoiceBelowMinBet(betChoices, minBet),
                 notice: this.getNoticeObj(notices.betAmountOfAnyChoiceIncorrect),
             },
             {
@@ -147,11 +147,10 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
         });
     }
 
-    anyChoiceBelowMinBet(betChoices: Record<string, number>, betTracks: Record<string, number>, minBet: number) {
+    anyChoiceBelowMinBet(betChoices: Record<string, number>, minBet: number) {
         return Object.keys(betChoices).some((choice) => {
             const amount = betChoices[choice];
-            const currentBetAmount = betTracks[choice] ?? 0;
-            return currentBetAmount + amount < minBet || amount < minBet;
+            return amount < minBet;
         });
     }
 }
