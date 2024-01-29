@@ -112,6 +112,8 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
     consume(player: any, payload: BetPayload): void {
         Object.assign(payload, {
             amount: Object.values(payload.betChoices).reduce((total, value) => total + value, 0) >> 0,
+            drawId: payload.drawId ?? (this.gameData as GameData).drawId,
+            receivedTime: new Date(),
         });
 
         const { amount, betChoices, freeBet, drawId } = payload;

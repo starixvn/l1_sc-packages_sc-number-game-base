@@ -224,13 +224,14 @@ describe("PlaceBetConsumer test", () => {
             // arrange
             consumer.validateBetRequest = jest.fn().mockReturnValueOnce(false);
             const payload = { betChoices: { player: 10, tie: 20 } };
+            (consumer.gameData as GameData).drawId = 1;
 
             // act
             // @ts-ignore
             consumer.consume({}, payload);
 
             // assert
-            expect(consumer.validateBetRequest).toHaveBeenCalledWith({}, payload.betChoices, 30, undefined, undefined);
+            expect(consumer.validateBetRequest).toHaveBeenCalledWith({}, payload.betChoices, 30, undefined, 1);
         });
     });
     describe("anyChoiceExceedItsMaxBet", () => {

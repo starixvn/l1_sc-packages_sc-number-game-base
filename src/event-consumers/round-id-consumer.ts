@@ -7,15 +7,16 @@ export default class RoundIdConsumer extends BaseEventConsumers.RoundIdConsumer 
         const unfinishedRound = await this.getLatestRound(false);
         if (unfinishedRound) {
             this.gameData.roundId = unfinishedRound.id;
-            return;
-        }
-        const lastRound = await this.getLatestRound(true);
-
-        if (lastRound) {
-            this.gameData.roundId = lastRound.id + 1;
         } else {
-            this.gameData.roundId = await this.getLastArchiveRound();
+            const lastRound = await this.getLatestRound(true);
+
+            if (lastRound) {
+                this.gameData.roundId = lastRound.id + 1;
+            } else {
+                this.gameData.roundId = await this.getLastArchiveRound();
+            }
         }
+
         await this.initDrawId();
     }
 
@@ -30,7 +31,7 @@ export default class RoundIdConsumer extends BaseEventConsumers.RoundIdConsumer 
             (this.gameData as GameData).drawId = lastRound.latestDrawId + 1;
         } else {
             const archiveStatus = await this.getLastArchive();
-            (this.gameData as GameData).drawId = archiveStatus.lastArcId["_draws"] + 1;
+            (this.gameData as GameData).drawId = archiveStatus ? archiveStatus.lastArcId["_draws"] + 1 : 1;
         }
     }
 

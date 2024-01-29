@@ -81,7 +81,19 @@ export default class GameCron extends Table.Crons.TableGameCron {
         const numberOfTurnsPerRound = (this.definition as GameDefinition).numberOfTurnsPerRound;
         const turn = (this.gameData as GameData).drawId % numberOfTurnsPerRound || numberOfTurnsPerRound;
         const { wholeRound, wholeTurn } = this.definition.durations as Duration;
-        this.gameData.remainingTime = wholeRound - (wholeTurn * turn - 1);
+        this.gameData.remainingTime = wholeRound - wholeTurn * (turn - 1);
+    }
+
+    async getUnfinishedRound() {
+        return this.roundsRepository
+            .findOne({ ended: false }, "id latestDrawId result settlementResult", { sort: { id: -1 } })
+            .lean()
+            .exec();
+    }
+
+    generateRoundData(unfinishedRound?: Round) {
+        const probabilities = (this.definition as GameDefinition).getProbabilities(unfinishedRound?.result);
+        (this.gameData as GameData).odds = getBetOdds(probabilities, this.gameData.gameConfigs.odds);
     }
 
     async proceed() {
@@ -125,18 +137,6 @@ export default class GameCron extends Table.Crons.TableGameCron {
             this.bot && (await this.bot.run());
             this.runningRoundInfoPublisher.publish();
         }
-    }
-
-    async getUnfinishedRound() {
-        return this.roundsRepository
-            .findOne({ ended: false }, "id latestDrawId result settlementResult", { sort: { id: -1 } })
-            .lean()
-            .exec();
-    }
-
-    generateRoundData(unfinishedRound?: Round) {
-        const probabilities = (this.definition as GameDefinition).getProbabilities(unfinishedRound?.result);
-        (this.gameData as GameData).odds = getBetOdds(probabilities, this.gameData.gameConfigs.odds);
     }
 
     async startTurn(remainingTime: number) {
