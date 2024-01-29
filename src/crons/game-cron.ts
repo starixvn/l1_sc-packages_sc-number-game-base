@@ -174,7 +174,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
         const { placingBets, wholeTurn } = this.definition.durations as Duration;
         const turn = Math.ceil(remainingTime / wholeTurn) || 1;
         const time = remainingTime - wholeTurn * (turn - 1);
-        return time < placingBets && time >= 0;
+        return (time < placingBets || time === wholeTurn) && time >= 0;
     }
 
     isStartingBetTime(remainingTime: number, durations: Duration) {
@@ -194,9 +194,9 @@ export default class GameCron extends Table.Crons.TableGameCron {
     }
 
     isSettlingTime(remainingTime: number) {
-        const { wholeTurn } = this.definition.durations as Duration;
+        const { wholeTurn, wholeRound } = this.definition.durations as Duration;
         const turn = Math.ceil(remainingTime / wholeTurn) || 1;
-        return remainingTime < 0 || remainingTime - wholeTurn * turn === 0;
+        return (remainingTime < 0 || remainingTime - wholeTurn * turn === -1) && remainingTime !== wholeRound - 1;
     }
 
     isStartingLockTime(remainingTime: number) {
