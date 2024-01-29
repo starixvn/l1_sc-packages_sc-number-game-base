@@ -20,7 +20,7 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
         const settlementResult = this.definition.settle(result);
         const { roundId, drawId, exchangeRates } = this.gameData as GameData;
 
-        if (drawId % (this.definition as GameDefinition).numberOfTurnsPerRound === 1) {
+        if (this.isFirstDrawOfRound(drawId)) {
             roundSettled = await this.roundsRepository.create({
                 id: roundId,
                 drawId: drawId,
@@ -34,7 +34,7 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
             const filter = { id: roundId };
             const update = { $push: { result: result, settlementResult: settlementResult }, $set: { drawId: drawId } };
 
-            if (drawId % (this.definition as GameDefinition).numberOfTurnsPerRound === 0) {
+            if (this.isFirstDrawOfRound(drawId)) {
                 update.$set = { ...update.$set, ...{ ended: true } };
             }
 
@@ -59,6 +59,10 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
 
             (this.roundResultPublisher as RoundResultPublisher).publishWinners(roundId, this.gameData.winningPlayers, drawId);
         }
+    }
+
+    isFirstDrawOfRound(drawId: number): boolean {
+        return drawId % (this.definition as GameDefinition).numberOfTurnsPerRound === 1;
     }
 
     async queryBets(drawId: number) {
@@ -96,10 +100,14 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
         }
     }
 
+    isLastDrawOfRound(drawId: number): boolean {
+        return drawId % (this.definition as GameDefinition).numberOfTurnsPerRound === 0;
+    }
+
     updateNextDrawData(finish: FinishDraw) {
         (this.gameData as GameData).drawId = finish.drawId + 1;
 
-        if (finish.drawId % (this.definition as GameDefinition).numberOfTurnsPerRound === 0) {
+        if (this.isLastDrawOfRound(finish.drawId)) {
             this.gameData.roundId = finish.roundId + 1;
         }
 

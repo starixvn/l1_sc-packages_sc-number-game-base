@@ -4,14 +4,20 @@ export default class GameDefinition extends BaseGameDefinition {
         {
             id = 0,
             name = "",
-            durations = {},
+            durations = {
+                wholeRound: 132,
+                placingBets: 25,
+                lockingBet: 3,
+                showingResult: 5,
+                wholeTurn: 33,
+            },
             choices = [],
             choicesMapper = {},
             hedgeBetGroups = [],
             numberOfTurnsPerRound = 1,
             numberOfRoundHistory = 100,
             historyPageSize = 8,
-        },
+        }: GameSettings,
         generateResult: Function,
         settle: Function,
         generateRawResultForHash: Function,
@@ -35,4 +41,16 @@ export type Duration = {
     lockingBet: number;
     showingResult: number;
     wholeTurn: number;
+};
+
+export type GameSettings = {
+    id: number;
+    name: string;
+    durations: Duration;
+    choices: any[];
+    choicesMapper: any;
+    hedgeBetGroups: any[];
+    numberOfTurnsPerRound: number;
+    numberOfRoundHistory?: number;
+    historyPageSize?: number;
 };
