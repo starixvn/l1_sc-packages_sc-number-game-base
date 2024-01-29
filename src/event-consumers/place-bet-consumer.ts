@@ -9,6 +9,7 @@ type BetPayload = {
     betChoices: Record<string, number>;
     freeBet?: boolean;
     drawId: number;
+    m?: string;
 };
 
 export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsumer {
@@ -113,6 +114,7 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
         Object.assign(payload, {
             amount: Object.values(payload.betChoices).reduce((total, value) => total + value, 0) >> 0,
             drawId: payload.drawId ?? (this.gameData as GameData).drawId,
+            mode: payload.m ?? this.DisplayMode.Landscape,
             receivedTime: new Date(),
         });
 

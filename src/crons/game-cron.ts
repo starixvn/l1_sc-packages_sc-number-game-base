@@ -140,8 +140,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
     }
 
     async startTurn(remainingTime: number) {
-        const { wholeTurn } = this.definition.durations as Duration;
-        const turn = Math.ceil(remainingTime / wholeTurn);
+        const turn = this.getCurrentTurn(remainingTime);
         if (turn === (this.definition as GameDefinition).numberOfTurnsPerRound) {
             this.resetForNewRound();
         } else {
@@ -172,14 +171,14 @@ export default class GameCron extends Table.Crons.TableGameCron {
 
     isDuringBetTime(remainingTime: number) {
         const { placingBets, wholeTurn } = this.definition.durations as Duration;
-        const turn = Math.ceil(remainingTime / wholeTurn) || 1;
+        const turn = this.getCurrentTurn(remainingTime) || 1;
         const time = remainingTime - wholeTurn * (turn - 1);
         return (time < placingBets || time === wholeTurn) && time >= 0;
     }
 
     isStartingBetTime(remainingTime: number, durations: Duration) {
         const { placingBets, wholeTurn } = durations;
-        const turn = Math.ceil(remainingTime / wholeTurn);
+        const turn = this.getCurrentTurn(remainingTime);
         const time = remainingTime - wholeTurn * (turn - 1);
         return time === placingBets;
     }
@@ -195,14 +194,20 @@ export default class GameCron extends Table.Crons.TableGameCron {
 
     isSettlingTime(remainingTime: number) {
         const { wholeTurn, wholeRound } = this.definition.durations as Duration;
-        const turn = Math.ceil(remainingTime / wholeTurn) || 1;
+        const turn = this.getCurrentTurn(remainingTime);
         return (remainingTime < 0 || remainingTime - wholeTurn * turn === -1) && remainingTime !== wholeRound - 1;
     }
 
     isStartingLockTime(remainingTime: number) {
         const { wholeTurn, lockingBet } = this.definition.durations as Duration;
-        const turn = Math.ceil(remainingTime / wholeTurn);
+        const turn = this.getCurrentTurn(remainingTime);
         const time = remainingTime - wholeTurn * (turn - 1);
         return time === lockingBet - 1;
+    }
+
+    getCurrentTurn(remainingTime: number) {
+        const { wholeTurn } = this.definition.durations as Duration;
+
+        return Math.ceil(remainingTime / wholeTurn);
     }
 }

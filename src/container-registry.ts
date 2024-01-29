@@ -1,7 +1,7 @@
 import { asClass } from "awilix";
 import { Table } from "sc-game-base";
 import { PlaceBetConsumer, RoundIdConsumer, SettleGameRoundConsumer } from "./event-consumers";
-import { GameCron } from "./crons";
+import { GameCron, ProcessBetQueue } from "./crons";
 import { RoundResultPublisher } from "./event-publishers";
 
 export default class ContainerRegistry extends Table.TableContainerRegistry {
@@ -26,6 +26,7 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
         super.registerCrons();
         this.container.register({
             gameCron: asClass(GameCron).singleton().proxy(),
+            processBetQueue: asClass(ProcessBetQueue).singleton().proxy(),
         });
     }
 }
