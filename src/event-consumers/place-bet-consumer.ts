@@ -17,7 +17,7 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
         const numberOfTurnsPerRound = (this.definition as GameDefinition).numberOfTurnsPerRound;
         const turn = (this.gameData as GameData).drawId % numberOfTurnsPerRound || numberOfTurnsPerRound;
         const { placingBets, showingResult, wholeTurn, lockingBet } = this.definition.durations as Duration;
-        const remainingTime = this.gameData.remainingTime - wholeTurn * (turn - 1);
+        const remainingTime = this.gameData.remainingTime - wholeTurn * (numberOfTurnsPerRound - turn);
         const showingResultTime = placingBets + showingResult;
 
         return [

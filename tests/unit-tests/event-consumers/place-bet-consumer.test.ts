@@ -40,14 +40,14 @@ describe("PlaceBetConsumer test", () => {
 
         describe("when game show results", () => {
             const testCases = [
-                { remainingTime: 25, drawId: 5 },
-                { remainingTime: 26, drawId: 5 },
-                { remainingTime: 58, drawId: 6 },
-                { remainingTime: 63, drawId: 6 },
-                { remainingTime: 91, drawId: 7 },
-                { remainingTime: 95, drawId: 7 },
-                { remainingTime: 124, drawId: 8 },
-                { remainingTime: 128, drawId: 8 },
+                { remainingTime: 25, drawId: 8 },
+                { remainingTime: 26, drawId: 8 },
+                { remainingTime: 58, drawId: 7 },
+                { remainingTime: 63, drawId: 7 },
+                { remainingTime: 91, drawId: 6 },
+                { remainingTime: 95, drawId: 6 },
+                { remainingTime: 124, drawId: 5 },
+                { remainingTime: 128, drawId: 5 },
             ];
             it.each(testCases)("should return failure", ({ remainingTime, drawId }) => {
                 // arrange
@@ -64,14 +64,14 @@ describe("PlaceBetConsumer test", () => {
 
         describe("when locking bet", () => {
             const testCases = [
-                { remainingTime: 2, drawId: 5 },
-                { remainingTime: 32, drawId: 5 },
-                { remainingTime: 35, drawId: 6 },
-                { remainingTime: 65, drawId: 6 },
-                { remainingTime: 68, drawId: 7 },
-                { remainingTime: 99, drawId: 7 },
-                { remainingTime: 100, drawId: 8 },
-                { remainingTime: 130, drawId: 8 },
+                { remainingTime: 2, drawId: 8 },
+                { remainingTime: 32, drawId: 8 },
+                { remainingTime: 35, drawId: 7 },
+                { remainingTime: 65, drawId: 7 },
+                { remainingTime: 68, drawId: 6 },
+                { remainingTime: 99, drawId: 6 },
+                { remainingTime: 100, drawId: 5 },
+                { remainingTime: 130, drawId: 5 },
             ];
             it.each(testCases)("should return failure", ({ remainingTime, drawId }) => {
                 // arrange
