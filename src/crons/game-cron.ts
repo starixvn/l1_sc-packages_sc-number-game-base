@@ -8,7 +8,7 @@ import { getBetOdds } from "../helpers";
 
 type Round = {
     id: number;
-    latestDrawId: number;
+    drawId: number;
     result: Array<object>;
     settlementResult: Array<object>;
 };
@@ -67,12 +67,12 @@ export default class GameCron extends Table.Crons.TableGameCron {
         await this.initResultHash();
         await this.getSettingForNewRound();
         await this.updateExchangeRates();
-        await this.initLatestRound();
+        await this.initLastRound();
         this.initRemainingTime();
         this.startCron();
     }
 
-    async initLatestRound() {
+    async initLastRound() {
         const unfinishedRound = await this.getUnfinishedRound();
         this.generateRoundData(unfinishedRound);
     }
@@ -86,7 +86,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
 
     async getUnfinishedRound() {
         return this.roundsRepository
-            .findOne({ ended: false }, "id latestDrawId result settlementResult", { sort: { id: -1 } })
+            .findOne({ ended: false }, "id drawId result settlementResult", { sort: { id: -1 } })
             .lean()
             .exec();
     }

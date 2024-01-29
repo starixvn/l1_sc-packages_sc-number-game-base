@@ -4,11 +4,11 @@ import GameData from "../game-data";
 
 export default class RoundIdConsumer extends BaseEventConsumers.RoundIdConsumer {
     async initRoundId() {
-        const unfinishedRound = await this.getLatestRound(false);
+        const unfinishedRound = await this.getLastRound(false);
         if (unfinishedRound) {
             this.gameData.roundId = unfinishedRound.id;
         } else {
-            const lastRound = await this.getLatestRound(true);
+            const lastRound = await this.getLastRound(true);
 
             if (lastRound) {
                 this.gameData.roundId = lastRound.id + 1;
@@ -21,14 +21,14 @@ export default class RoundIdConsumer extends BaseEventConsumers.RoundIdConsumer 
     }
 
     async initDrawId() {
-        const unfinishedRound = await this.getLatestRound(false);
+        const unfinishedRound = await this.getLastRound(false);
         if (unfinishedRound) {
-            (this.gameData as GameData).drawId = unfinishedRound.latestDrawId + 1;
+            (this.gameData as GameData).drawId = unfinishedRound.drawId + 1;
             return;
         }
-        const lastRound = await this.getLatestRound(true);
+        const lastRound = await this.getLastRound(true);
         if (lastRound) {
-            (this.gameData as GameData).drawId = lastRound.latestDrawId + 1;
+            (this.gameData as GameData).drawId = lastRound.drawId + 1;
         } else {
             const archiveStatus = await this.getLastArchive();
             (this.gameData as GameData).drawId = archiveStatus ? archiveStatus.lastArcId["_draws"] + 1 : 1;
@@ -47,9 +47,9 @@ export default class RoundIdConsumer extends BaseEventConsumers.RoundIdConsumer 
         return archiveStatus ? (archiveStatus.lastArcId["_phiens"] ?? archiveStatus.lastArcId["_rounds"]) + 1 : 1;
     }
 
-    async getLatestRound(isEnded: boolean) {
+    async getLastRound(isEnded: boolean) {
         return this.roundsRepository
-            .findOne({ ended: isEnded }, "id latestDrawId", { sort: { id: -1 } })
+            .findOne({ ended: isEnded }, "id drawId", { sort: { id: -1 } })
             .lean()
             .exec();
     }

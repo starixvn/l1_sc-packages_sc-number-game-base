@@ -23,7 +23,7 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
         if (drawId % (this.definition as GameDefinition).numberOfTurnsPerRound === 1) {
             roundSettled = await this.roundsRepository.create({
                 id: roundId,
-                latestDrawId: drawId,
+                drawId: drawId,
                 result: [result],
                 settlementResult: [settlementResult],
                 time: new Date(),
@@ -32,7 +32,7 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
             });
         } else {
             const filter = { id: roundId };
-            const update = { $push: { result: result, settlementResult: settlementResult }, $set: { latestDrawId: drawId } };
+            const update = { $push: { result: result, settlementResult: settlementResult }, $set: { drawId: drawId } };
 
             if (drawId % (this.definition as GameDefinition).numberOfTurnsPerRound === 0) {
                 update.$set = { ...update.$set, ...{ ended: true } };
@@ -47,7 +47,7 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
                 result: roundSettled.result,
                 settlementResult: roundSettled.settlementResult,
                 roundId: roundSettled.id,
-                drawId: roundSettled.latestDrawId,
+                drawId: roundSettled.drawId,
                 time: new Date(),
                 ended: roundSettled.ended,
             };

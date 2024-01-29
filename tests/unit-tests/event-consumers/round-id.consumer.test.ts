@@ -13,7 +13,7 @@ describe("RoundIdConsumer tests", () => {
         consumer = new RoundIdConsumer(gameData, definition, null, gameManagementApiClientFactory);
     });
     describe("when there is unfinished round", () => {
-        const unfinishedRound = { id: 10, latestDrawId: 38 };
+        const unfinishedRound = { id: 10, drawId: 38 };
         beforeEach(() => {
             const roundsRepository = {
                 findOne: jest.fn().mockReturnValue({
@@ -24,12 +24,12 @@ describe("RoundIdConsumer tests", () => {
             };
             consumer.roundsRepository = roundsRepository;
         });
-        it("should call getLatestRound with isEnded = false", async () => {
+        it("should call getLastRound with isEnded = false", async () => {
             // act
             await consumer.initRoundId();
 
             // assert
-            expect(consumer.roundsRepository.findOne).toHaveBeenCalledWith({ ended: false }, "id latestDrawId", { sort: { id: -1 } });
+            expect(consumer.roundsRepository.findOne).toHaveBeenCalledWith({ ended: false }, "id drawId", { sort: { id: -1 } });
         });
 
         it("should set roundId = roundId of unfinished round", async () => {
@@ -45,19 +45,19 @@ describe("RoundIdConsumer tests", () => {
             await consumer.initRoundId();
 
             // assert
-            expect(gameData.drawId).toBe(unfinishedRound.latestDrawId + 1);
+            expect(gameData.drawId).toBe(unfinishedRound.drawId + 1);
         });
     });
 
     describe("when there is not unfinished round", () => {
-        const round = { id: 10, latestDrawId: 40 };
+        const round = { id: 10, drawId: 40 };
         beforeEach(() => {
-            consumer.getLatestRound = jest.fn((isEnded) => {
+            consumer.getLastRound = jest.fn((isEnded) => {
                 return isEnded ? round : null;
             }) as any;
         });
 
-        it("should set roundId = latestRoundId + 1", async () => {
+        it("should set roundId = lastRoundId + 1", async () => {
             // act
             await consumer.initRoundId();
 
@@ -65,12 +65,12 @@ describe("RoundIdConsumer tests", () => {
             expect(gameData.roundId).toBe(round.id + 1);
         });
 
-        it("should set drawId = latestDrawId + 1", async () => {
+        it("should set drawId = drawId + 1", async () => {
             // act
             await consumer.initRoundId();
 
             // assert
-            expect(gameData.drawId).toBe(round.latestDrawId + 1);
+            expect(gameData.drawId).toBe(round.drawId + 1);
         });
     });
 

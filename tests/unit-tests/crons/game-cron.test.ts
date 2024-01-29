@@ -48,7 +48,7 @@ describe("GameCron tests", () => {
         });
         it("should run correctly", async () => {
             // arrange
-            consumer.initLatestRound = jest.fn();
+            consumer.initLastRound = jest.fn();
             consumer.initRemainingTime = jest.fn();
             // act
             await consumer.start();
@@ -58,15 +58,15 @@ describe("GameCron tests", () => {
             expect(consumer.initResultHash).toHaveBeenCalled();
             expect(consumer.getSettingForNewRound).toHaveBeenCalled();
             expect(consumer.updateExchangeRates).toHaveBeenCalled();
-            expect(consumer.initLatestRound).toHaveBeenCalled();
+            expect(consumer.initLastRound).toHaveBeenCalled();
             expect(consumer.initRemainingTime).toHaveBeenCalled();
             expect(consumer.startCron).toHaveBeenCalled();
         });
 
-        it("should init latest round data when there is unfinished round", async () => {
+        it("should init last round data when there is unfinished round", async () => {
             // arrange
             consumer.initRemainingTime = jest.fn();
-            const unfinishedRound = { id: 1, latestDrawId: 2, result: [], settlementResult: [] };
+            const unfinishedRound = { id: 1, drawId: 2, result: [], settlementResult: [] };
             (consumer.roundsRepository.findOne as jest.Mock).mockReturnValue({
                 lean: jest.fn().mockReturnValue({
                     exec: jest.fn().mockReturnValue(unfinishedRound),
@@ -87,7 +87,7 @@ describe("GameCron tests", () => {
 
         describe("initRemainingTime", () => {
             beforeEach(() => {
-                consumer.initLatestRound = jest.fn();
+                consumer.initLastRound = jest.fn();
                 (consumer.definition as GameDefinition).numberOfTurnsPerRound = 4;
                 consumer.definition.durations = { wholeRound: 132, wholeTurn: 33 } as any;
             });
