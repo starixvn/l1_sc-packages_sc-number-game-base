@@ -34,7 +34,7 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
             const filter = { id: roundId };
             const update = { $push: { result: result, settlementResult: settlementResult }, $set: { drawId: drawId } };
 
-            if (this.isFirstDrawOfRound(drawId)) {
+            if (this.isLastDrawOfRound(drawId)) {
                 update.$set = { ...update.$set, ...{ ended: true } };
             }
 

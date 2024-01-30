@@ -6,7 +6,7 @@
             "node",
             "jest"
         ],
-        "module": "commonjs",
+        "module": "CommonJS",
         "declaration": true,
         "esModuleInterop": true,
         "strict": true,
