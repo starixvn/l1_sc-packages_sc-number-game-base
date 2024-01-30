@@ -1,6 +1,6 @@
 {
     "name": "sc-number-game-base",
-    "version": "1.0.0-beta.5",
+    "version": "1.0.0-beta.7",
     "description": "The codebase of number games",
     "type": "commonjs",
     "types": "dist/index.d.ts",
@@ -15,7 +15,7 @@
         "reg": "npm set registry http://npm.lumigame.com",
         "pub": "npm publish --registry http://npm.lumigame.com",
         "betaver": "npm version prerelease --preid beta",
-        "pubbeta": "npm publish --registry http://npm.lumigame.com --tag beta",
+        "pubbeta": "npm run build && npm publish --registry http://npm.lumigame.com --tag beta",
         "semantic-release": "semantic-release"
     },
     "jestSonar": {
@@ -30,6 +30,10 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "chance": "1.1.6",
+        "d3-array": "3.2.0",
+        "lodash": "^4.17.21",
+        "random-js": "^2.1.0",
         "sc-common": "1.8.1",
         "sc-game-base": "^5.0.0",
         "socket.io-prom-metrics": "1.0.3"
@@ -38,7 +42,10 @@
         "@babel/preset-env": "^7.23.8",
         "@commitlint/cli": "^18.4.4",
         "@commitlint/config-conventional": "^18.4.4",
+        "@types/chance": "^1.1.6",
+        "@types/d3-array": "^3.2.1",
         "@types/jest": "^29.5.11",
+        "@types/lodash": "^4.14.202",
         "@types/mongoose": "^5.11.97",
         "husky": "^8.0.3",
         "jest": "^29.7.0",
