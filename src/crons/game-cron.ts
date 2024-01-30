@@ -171,15 +171,13 @@ export default class GameCron extends Table.Crons.TableGameCron {
 
     isDuringBetTime(remainingTime: number) {
         const { placingBets, wholeTurn } = this.definition.durations as Duration;
-        const turn = this.getCurrentTurn(remainingTime) || 1;
-        const time = remainingTime - wholeTurn * (turn - 1);
+        const time = this.getCurrentTimeOfTurn(remainingTime);
         return (time < placingBets || time === wholeTurn) && time >= 0;
     }
 
     isStartingBetTime(remainingTime: number, durations: Duration) {
-        const { placingBets, wholeTurn } = durations;
-        const turn = this.getCurrentTurn(remainingTime);
-        const time = remainingTime - wholeTurn * (turn - 1);
+        const { placingBets } = durations;
+        const time = this.getCurrentTimeOfTurn(remainingTime);
         return time === placingBets;
     }
 
@@ -199,10 +197,16 @@ export default class GameCron extends Table.Crons.TableGameCron {
     }
 
     isStartingLockTime(remainingTime: number) {
-        const { wholeTurn, lockingBet } = this.definition.durations as Duration;
-        const turn = this.getCurrentTurn(remainingTime);
-        const time = remainingTime - wholeTurn * (turn - 1);
+        const { lockingBet } = this.definition.durations as Duration;
+        const time = this.getCurrentTimeOfTurn(remainingTime);
         return time === lockingBet - 1;
+    }
+
+    getCurrentTimeOfTurn(remainingTime: number) {
+        const { wholeTurn } = this.definition.durations as Duration;
+
+        const turn = Math.ceil(remainingTime / wholeTurn);
+        return remainingTime - wholeTurn * (turn - 1);
     }
 
     getCurrentTurn(remainingTime: number) {
