@@ -93,7 +93,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
 
     generateRoundData(unfinishedRound?: Round) {
         const probabilities = (this.definition as GameDefinition).getProbabilities(unfinishedRound?.result);
-        (this.gameData as GameData).odds = getBetOdds(probabilities, this.gameData.gameConfigs.odds);
+        (this.gameData as GameData).odds = getBetOdds(probabilities, this.gameData.gameConfigs?.odds);
     }
 
     async proceed() {
