@@ -19,6 +19,8 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
         const result = this.generateResult();
         const settlementResult = this.definition.settle(result);
         const { roundId, drawId, exchangeRates } = this.gameData as GameData;
+        Object.assign(result, { drawId: drawId });
+        Object.assign(settlementResult, { drawId: drawId });
 
         if (this.isFirstDrawOfRound(drawId)) {
             roundSettled = await this.roundsRepository.create({
