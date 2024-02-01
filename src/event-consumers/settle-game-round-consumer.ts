@@ -10,31 +10,31 @@ export type FinishDraw = {
     roundId: number;
     drawId: number;
     time: Date;
-    ended: boolean;
+    isLastDraw: boolean;
 };
 
 export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGameRoundConsumer {
     async settleRound() {
         let roundSettled: any;
-        const result = this.generateResult();
-        const settlementResult = this.definition.settle(result);
+        const drawResult = this.generateResult();
+        const drawSettlementResult = this.definition.settle(drawResult);
         const { roundId, drawId, exchangeRates } = this.gameData as GameData;
-        Object.assign(result, { drawId: drawId });
-        Object.assign(settlementResult, { drawId: drawId });
+        Object.assign(drawResult, { drawId: drawId });
+        Object.assign(drawSettlementResult, { drawId: drawId });
 
         if (this.isFirstDrawOfRound(drawId)) {
             roundSettled = await this.roundsRepository.create({
                 id: roundId,
                 drawId: drawId,
-                result: [result],
-                settlementResult: [settlementResult],
+                result: [drawResult],
+                settlementResult: [drawSettlementResult],
                 time: new Date(),
                 exchangeRateId: exchangeRates.exId,
                 ended: false,
             });
         } else {
             const filter = { id: roundId };
-            const update = { $push: { result: result, settlementResult: settlementResult }, $set: { drawId: drawId } };
+            const update = { $push: { result: drawResult, settlementResult: drawSettlementResult }, $set: { drawId: drawId } };
 
             if (this.isLastDrawOfRound(drawId)) {
                 update.$set = { ...update.$set, ...{ ended: true } };
@@ -45,19 +45,19 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
         }
 
         if (roundSettled) {
-            const finish: FinishDraw = {
-                result: roundSettled.result,
-                settlementResult: roundSettled.settlementResult,
+            const finishDraw: FinishDraw = {
+                result: drawResult,
+                settlementResult: drawSettlementResult,
                 roundId: roundSettled.id,
                 drawId: roundSettled.drawId,
                 time: new Date(),
-                ended: roundSettled.ended,
+                isLastDraw: roundSettled.ended,
             };
-            this.roundResultPublisher.publishRoundResult(finish);
+            this.roundResultPublisher.publishRoundResult(finishDraw);
 
-            await this.settleBets(finish);
+            await this.settleBets(finishDraw);
 
-            this.updateNextDrawData(finish);
+            this.updateNextDrawData(finishDraw, roundSettled.result);
 
             (this.roundResultPublisher as RoundResultPublisher).publishWinners(roundId, this.gameData.winningPlayers, drawId);
         }
@@ -74,17 +74,15 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
         return realPlayerBets.concat(botBets);
     }
 
-    async settleBets(finish: FinishDraw) {
-        const bets = await this.queryBets(finish.drawId);
+    async settleBets(finishDraw: FinishDraw) {
+        const bets = await this.queryBets(finishDraw.drawId);
 
         if (bets?.length) {
             const odds = (this.gameData as GameData).odds;
 
             await Promise.all(
                 bets.map(async (bet: any) => {
-                    const settlementDrawData = finish.settlementResult.find((s: any) => s.drawId === bet.drawId);
-
-                    const settlementDrawResult = getFilterObjectWithAllowedKeys(settlementDrawData, this.definition.choices);
+                    const settlementDrawResult = getFilterObjectWithAllowedKeys(finishDraw.settlementResult, this.definition.choices);
 
                     const betResult = this.calculateBetResult(settlementDrawResult, bet, odds);
 
@@ -93,7 +91,7 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
                     bet.paid = true;
 
                     await bet.save();
-                    await this.callEndGame(bet, finish.drawId, finish.time, betResult);
+                    await this.callEndGame(bet, finishDraw.drawId, finishDraw.time, betResult);
 
                     this.captureBetResult(bet.uid, betResult, bet.rate);
                     await this.userBetResultPublisher.publish(bet.uid, betResult);
@@ -106,14 +104,14 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
         return drawId % (this.definition as GameDefinition).numberOfTurnsPerRound === 0;
     }
 
-    updateNextDrawData(finish: FinishDraw) {
-        (this.gameData as GameData).drawId = finish.drawId + 1;
+    updateNextDrawData(finishDraw: FinishDraw, roundResult: any) {
+        (this.gameData as GameData).drawId = finishDraw.drawId + 1;
 
-        if (this.isLastDrawOfRound(finish.drawId)) {
-            this.gameData.roundId = finish.roundId + 1;
+        if (this.isLastDrawOfRound(finishDraw.drawId)) {
+            this.gameData.roundId = finishDraw.roundId + 1;
         }
 
-        const probabilities = (this.definition as GameDefinition).getProbabilities(finish.ended ? [] : finish.result);
+        const probabilities = (this.definition as GameDefinition).getProbabilities(finishDraw.isLastDraw ? [] : roundResult);
 
         (this.gameData as GameData).odds = getBetOdds(probabilities, this.gameData.gameConfigs.odds);
     }
