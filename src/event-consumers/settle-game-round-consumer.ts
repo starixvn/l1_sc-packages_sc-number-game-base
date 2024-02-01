@@ -59,6 +59,8 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
 
             this.updateNextDrawData(finishDraw, roundSettled.result);
 
+            this.updateCurrentRoundData(roundSettled.result);
+
             (this.roundResultPublisher as RoundResultPublisher).publishWinners(roundId, this.gameData.winningPlayers, drawId);
         }
     }
@@ -114,5 +116,9 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
         const probabilities = (this.definition as GameDefinition).getProbabilities(finishDraw.isLastDraw ? [] : roundResult);
 
         (this.gameData as GameData).odds = getBetOdds(probabilities, this.gameData.gameConfigs.odds);
+    }
+
+    updateCurrentRoundData(roundResult: any) {
+        (this.gameData as GameData).currentRoundData = roundResult;
     }
 }
