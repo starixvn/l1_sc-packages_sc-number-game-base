@@ -1,7 +1,7 @@
 import Chance from "chance";
 import { MersenneTwister19937, Random } from "random-js";
 import { shuffle as d3Shuffle } from "d3-array";
-import * as _ from "lodash";
+import lodashShuffle from "lodash/shuffle";
 
 const chance = new Chance();
 const random = new Random(MersenneTwister19937.autoSeed());
@@ -23,7 +23,7 @@ const random2 = (numberOfPicked: number, numberOfSeeds: number, excludeNumbers: 
 };
 
 const random3 = (numberOfPicked: number, numberOfSeeds: number, excludeNumbers: number[]) =>
-    _.shuffle(_.shuffle(_.shuffle(generateSeeds(numberOfSeeds, excludeNumbers)))).slice(0, numberOfPicked);
+    lodashShuffle(lodashShuffle(lodashShuffle(generateSeeds(numberOfSeeds, excludeNumbers)))).slice(0, numberOfPicked);
 
 const random4 = (numberOfPicked: number, numberOfSeeds: number, excludeNumbers: number[]) =>
     chance.pickset(generateSeeds(numberOfSeeds, excludeNumbers), numberOfPicked);

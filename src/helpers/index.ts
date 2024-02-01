@@ -1,4 +1,4 @@
 import { getBetOdds } from "./calculate-odds";
 import { getFilterObjectWithAllowedKeys } from "./object-filtered";
-
-export { getBetOdds, getFilterObjectWithAllowedKeys };
+import generateRandomNumbers from "./random-helper";
+export { getBetOdds, getFilterObjectWithAllowedKeys, generateRandomNumbers };
