@@ -15,5 +15,8 @@ module.exports = async () => {
         reporters: ["default", ["jest-junit", { outputDirectory: "coverage" }]],
         coverageReporters: ["clover", "lcov", "text-summary", "cobertura"],
         coverageDirectory: "coverage",
+        moduleNameMapper: {
+            "d3-array": "<rootDir>/node_modules/d3-array/dist/d3-array.min.js",
+        },
     };
 };

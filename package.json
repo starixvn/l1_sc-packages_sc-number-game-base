@@ -35,7 +35,7 @@
         "lodash": "^4.17.21",
         "random-js": "^2.1.0",
         "sc-common": "1.8.1",
-        "sc-game-base": "5.0.1-beta.0",
+        "sc-game-base": "5.0.1-beta.1",
         "socket.io-prom-metrics": "1.0.3"
     },
     "devDependencies": {

@@ -1,5 +1,4 @@
 import { stub } from "jest-auto-stub";
-import { helpers } from "sc-common";
 import { Core } from "sc-game-base";
 import { ProcessBetQueue } from "../../../src/crons";
 import GameDefinition from "../../../src/game-definition";
