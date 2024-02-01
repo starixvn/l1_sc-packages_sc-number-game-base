@@ -37,8 +37,7 @@ export default class RoundIdConsumer extends BaseEventConsumers.RoundIdConsumer 
 
     async getLastArchive() {
         const { configName } = this.definition;
-        const archiveStatus = await getOrDefault(this.gameManagementApiClient.archiveStatus.getArchiveStatus(configName), null);
-        return archiveStatus;
+        return getOrDefault(this.gameManagementApiClient.archiveStatus.getArchiveStatus(configName), null);
     }
 
     async getLastArchiveRound() {

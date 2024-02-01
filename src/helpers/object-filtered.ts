@@ -3,7 +3,5 @@ export const getFilterObjectWithAllowedKeys = (object: Record<string, any>, allo
 
     const filteredEntries = entries.filter(([key]) => allowedKeys.includes(key));
 
-    const filteredObject = Object.fromEntries(filteredEntries);
-
-    return filteredObject;
+    return Object.fromEntries(filteredEntries);
 };
