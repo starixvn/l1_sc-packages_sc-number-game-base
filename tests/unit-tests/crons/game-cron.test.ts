@@ -18,6 +18,14 @@ describe("GameCron tests", () => {
     const gameManagementApiClientFactory = stub<GameManagementApiClientFactory>();
     const roundIdConsumer = stub<Core.BaseEventConsumers.RoundIdConsumer>();
 
+    const durations = {
+        wholeRound: 134,
+        placingBets: 25,
+        lockingBet: 3,
+        showingResult: 5,
+        wholeTurn: 33,
+        startingRound: 2,
+    };
     let consumer: GameCron;
     beforeEach(() => {
         consumer = new GameCron({
@@ -74,14 +82,14 @@ describe("GameCron tests", () => {
             });
             (consumer.definition as GameDefinition).getProbabilities = jest.fn().mockReturnValue({});
             (getBetOdds as jest.Mock).mockReturnValue({ choice1: 2 });
-            consumer.gameData.gameConfigs.odds = { choice1: 0.1 };
+            consumer.gameData.gameConfigs.margin = [{ max: 100, choice1: 0.1 }];
 
             // act
             await consumer.start();
 
             // assert
             expect((consumer.definition as GameDefinition).getProbabilities).toHaveBeenCalledWith(unfinishedRound.result);
-            expect(getBetOdds).toHaveBeenCalledWith({}, { choice1: 0.1 });
+            expect(getBetOdds).toHaveBeenCalledWith({}, consumer.gameData.gameConfigs.margin);
             expect((consumer.gameData as GameData).odds).toEqual({ choice1: 2 });
         });
 
@@ -89,10 +97,10 @@ describe("GameCron tests", () => {
             beforeEach(() => {
                 consumer.initLastRound = jest.fn();
                 (consumer.definition as GameDefinition).numberOfTurnsPerRound = 4;
-                consumer.definition.durations = { wholeRound: 132, wholeTurn: 33 } as any;
+                consumer.definition.durations = durations as any;
             });
             const testCases = [
-                { drawId: 5, expectedRemainingTime: 132 },
+                { drawId: 5, expectedRemainingTime: 134 },
                 { drawId: 6, expectedRemainingTime: 99 },
                 { drawId: 7, expectedRemainingTime: 66 },
                 { drawId: 8, expectedRemainingTime: 33 },
@@ -111,13 +119,6 @@ describe("GameCron tests", () => {
     });
 
     describe("proceed", () => {
-        const durations = {
-            wholeRound: 132,
-            placingBets: 25,
-            lockingBet: 3,
-            showingResult: 5,
-            wholeTurn: 33,
-        };
         beforeEach(() => {
             consumer.definition.durations = durations as any;
             (consumer.definition as GameDefinition).numberOfTurnsPerRound = 4;
@@ -146,6 +147,7 @@ describe("GameCron tests", () => {
                 consumer.runningRoundInfoPublisher.publishToAllUsers = jest.fn();
                 consumer.roundResultConsumer.generateResultAndPublishHash = jest.fn();
                 consumer.gameStatusPublisher.publishStartPlacingBetStatus = jest.fn();
+                (consumer.definition as GameDefinition).getProbabilities = jest.fn();
                 Table.Crons.TableGameCron.prototype.resetForNewRound = jest.fn();
                 (getBetOdds as jest.Mock).mockReturnValue({ choice1: 1 });
             });
@@ -177,16 +179,31 @@ describe("GameCron tests", () => {
                 expect(consumer.bot.reset).toHaveBeenCalled();
             });
 
-            it.each(testCases)("should publish new turn data", async ({ remainingTime }) => {
+            it.each(testCases)("should calculate odds", async ({ remainingTime }) => {
                 // arrange
                 consumer.gameData.remainingTime = remainingTime;
-                (consumer.gameData as GameData).odds = { choice1: 10 };
+                consumer.gameData.gameConfigs.margin = [];
+                (getBetOdds as jest.Mock).mockReturnValueOnce({ choice1: 10 });
+                ((consumer.definition as GameDefinition).getProbabilities as jest.Mock).mockReturnValueOnce({ choice1: 0.1 });
 
                 // act
                 await consumer.proceed();
 
                 // assert
-                expect(consumer.runningRoundInfoPublisher.publishToAllUsers).toHaveBeenCalledWith({ odds: { choice1: 10 } });
+                expect(getBetOdds).toHaveBeenCalledWith({ choice1: 0.1 }, []);
+            });
+
+            it.each(testCases)("should publish new turn data", async ({ remainingTime }) => {
+                // arrange
+                consumer.gameData.remainingTime = remainingTime;
+                (consumer.gameData as GameData).drawId = 2;
+                (getBetOdds as jest.Mock).mockReturnValueOnce({ choice1: 10 });
+
+                // act
+                await consumer.proceed();
+
+                // assert
+                expect(consumer.runningRoundInfoPublisher.publishToAllUsers).toHaveBeenCalledWith({ odds: { choice1: 10 }, drawId: 2 });
             });
 
             const remainingTimeStartingNewRound = 125;
@@ -226,12 +243,13 @@ describe("GameCron tests", () => {
             it.each(testCases)("should publish new turn data", async () => {
                 // arrange
                 consumer.gameData.remainingTime = remainingTimeStartingNewRound;
+                (consumer.gameData as GameData).drawId = 3;
 
                 // act
                 await consumer.proceed();
 
                 // assert
-                expect(consumer.runningRoundInfoPublisher.publishToAllUsers).toHaveBeenCalledWith({ odds: { choice1: 1 } });
+                expect(consumer.runningRoundInfoPublisher.publishToAllUsers).toHaveBeenCalledWith({ odds: { choice1: 1 }, drawId: 3 });
             });
         });
 

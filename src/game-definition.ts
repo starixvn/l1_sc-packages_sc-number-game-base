@@ -5,11 +5,12 @@ export default class GameDefinition extends BaseGameDefinition {
             id = 0,
             name = "",
             durations = {
-                wholeRound: 132,
+                wholeRound: 33,
                 placingBets: 25,
                 lockingBet: 3,
                 showingResult: 5,
                 wholeTurn: 33,
+                startingRound: 0,
             },
             choices = [],
             choicesMapper = {},
@@ -41,6 +42,7 @@ export type Duration = {
     lockingBet: number;
     showingResult: number;
     wholeTurn: number;
+    startingRound: number;
 };
 
 export type GameSettings = {

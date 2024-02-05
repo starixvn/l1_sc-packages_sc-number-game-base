@@ -62,8 +62,9 @@ describe("InGameConsumer tests", () => {
             consumer.getResultHash = jest.fn().mockReturnValue({});
             const expected = {
                 roundId,
-                drawId: 2,
+                roundData: { drawId: 2 },
                 odds,
+                drawId: 2,
                 gameConfigs: {
                     maxBet: { choice1: 2000, choice2: 2000 },
                     odds: gameConfigs.odds,

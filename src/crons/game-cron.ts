@@ -80,8 +80,8 @@ export default class GameCron extends Table.Crons.TableGameCron {
     initRemainingTime() {
         const numberOfTurnsPerRound = (this.definition as GameDefinition).numberOfTurnsPerRound;
         const turn = (this.gameData as GameData).drawId % numberOfTurnsPerRound || numberOfTurnsPerRound;
-        const { wholeRound, wholeTurn } = this.definition.durations as Duration;
-        this.gameData.remainingTime = wholeRound - wholeTurn * (turn - 1);
+        const { wholeRound, wholeTurn, startingRound } = this.definition.durations as Duration;
+        this.gameData.remainingTime = turn === 1 ? wholeRound : wholeRound - startingRound - wholeTurn * (turn - 1);
     }
 
     async getUnfinishedRound() {
@@ -92,8 +92,13 @@ export default class GameCron extends Table.Crons.TableGameCron {
     }
 
     generateRoundData(unfinishedRound?: Round) {
-        const probabilities = (this.definition as GameDefinition).getProbabilities(unfinishedRound?.result);
-        (this.gameData as GameData).odds = getBetOdds(probabilities, this.gameData.gameConfigs?.odds);
+        (this.gameData as GameData).roundResult = unfinishedRound?.result ?? [];
+        this.calculateOdds(unfinishedRound?.result);
+    }
+
+    calculateOdds(roundResult: any[] = []) {
+        const probabilities = (this.definition as GameDefinition).getProbabilities(roundResult);
+        (this.gameData as GameData).odds = getBetOdds(probabilities, this.gameData.gameConfigs?.margin);
     }
 
     async proceed() {
@@ -152,12 +157,14 @@ export default class GameCron extends Table.Crons.TableGameCron {
     }
 
     resetForNewRound(): void {
+        (this.gameData as GameData).roundResult = [];
         this.resetForNewTurn();
         this.generateRoundData();
     }
 
     resetForNewTurn() {
         super.resetForNewRound();
+        this.calculateOdds((this.gameData as GameData).roundResult);
     }
 
     publishNewTurnData() {
@@ -166,7 +173,8 @@ export default class GameCron extends Table.Crons.TableGameCron {
     }
 
     formatNewTurnData() {
-        return { odds: (this.gameData as GameData).odds };
+        const { odds, drawId } = this.gameData as GameData;
+        return { odds, drawId };
     }
 
     isDuringBetTime(remainingTime: number) {
@@ -186,14 +194,14 @@ export default class GameCron extends Table.Crons.TableGameCron {
     }
 
     isStartingGenerateResultTime(remainingTime: number) {
-        const { wholeRound, placingBets, wholeTurn } = this.definition.durations as Duration;
-        return remainingTime === wholeRound - wholeTurn + placingBets;
+        const { wholeRound, placingBets, wholeTurn, startingRound } = this.definition.durations as Duration;
+        return remainingTime === wholeRound - startingRound - wholeTurn + placingBets;
     }
 
     isSettlingTime(remainingTime: number) {
-        const { wholeTurn, wholeRound } = this.definition.durations as Duration;
+        const { wholeTurn, wholeRound, startingRound } = this.definition.durations as Duration;
         const turn = this.getCurrentTurn(remainingTime);
-        return (remainingTime < 0 || remainingTime - wholeTurn * turn === -1) && remainingTime !== wholeRound - 1;
+        return (remainingTime < 0 || remainingTime - wholeTurn * turn === -1) && remainingTime !== wholeRound - startingRound - 1;
     }
 
     isStartingLockTime(remainingTime: number) {

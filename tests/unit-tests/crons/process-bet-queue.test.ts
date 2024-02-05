@@ -66,11 +66,12 @@ describe("ProcessBetQueue tests", () => {
             (consumer.gameData as GameData).drawId = 8;
             (consumer.definition as GameDefinition).numberOfTurnsPerRound = 4;
             const durations = {
-                wholeRound: 132,
+                wholeRound: 134,
                 placingBets: 25,
                 lockingBet: 3,
                 showingResult: 5,
                 wholeTurn: 33,
+                startingRound: 2,
             };
             consumer.definition.durations = durations;
         });

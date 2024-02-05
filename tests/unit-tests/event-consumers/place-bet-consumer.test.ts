@@ -19,11 +19,12 @@ describe("PlaceBetConsumer test", () => {
             consumer.gameData.gameConfigs = {} as any;
             consumer.gameData.remainingTime = 1;
             consumer.definition.durations = {
-                wholeRound: 132,
+                wholeRound: 134,
                 placingBets: 25,
                 lockingBet: 3,
                 showingResult: 5,
                 wholeTurn: 33,
+                startingRound: 2,
             } as any;
             (consumer.definition as any).numberOfTurnsPerRound = 4;
         });

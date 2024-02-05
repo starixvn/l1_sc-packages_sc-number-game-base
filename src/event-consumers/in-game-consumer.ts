@@ -9,7 +9,7 @@ export default class InGameConsumer extends TableInGameConsumer {
         const user = await this.getUserInfo(realPlayer);
         const roundHistory = await this.getRoundsHistory();
 
-        const { totalBets, roundId, exchangeRates, chips, gameConfigs, drawId, odds } = this.gameData as GameData;
+        const { totalBets, roundId, exchangeRates, chips, gameConfigs, odds, drawId } = this.gameData as GameData;
         const { session } = realPlayer;
         const rate = exchangeRates.code[session.currencyCode] * session.multiplier;
         const configs = this.getGameConfigs(session.currencyGroupId);
@@ -18,8 +18,9 @@ export default class InGameConsumer extends TableInGameConsumer {
 
         const payload = {
             roundId,
-            drawId,
+            roundData: this.getCurrentRoundData(),
             odds,
+            drawId,
             gameConfigs: configs,
             roundHistory,
             ownBets,
@@ -35,6 +36,11 @@ export default class InGameConsumer extends TableInGameConsumer {
         return disabled && realPlayer.session?.system === Systems.Mini
             ? payload
             : { ...payload, remainingTime: this.gameData.remainingTime };
+    }
+
+    getCurrentRoundData() {
+        const { drawId } = this.gameData as GameData;
+        return { drawId };
     }
 
     getGameConfigs(currencyGroupId: string) {
