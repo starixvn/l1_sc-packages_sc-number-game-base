@@ -4,7 +4,14 @@ import GameDefinition from "../../../src/game-definition";
 import GameData from "../../../src/game-data";
 import { Core } from "sc-game-base";
 import GameManagementApiClientFactory from "sc-game-base/src/core/game-management-api";
+import { BetCountHelper } from "../../../src/helpers";
 
+jest.mock("../../../src/helpers", () => ({
+    BetCountHelper: {
+        calculateBetPercentage: jest.fn(),
+        calculatePlayerBetCount: jest.fn(),
+    },
+}));
 describe("InGameConsumer tests", () => {
     const definition = stub<GameDefinition>();
     const gameData = stub<GameData>();
@@ -22,7 +29,7 @@ describe("InGameConsumer tests", () => {
     describe("buildPayload", () => {
         it("should return expected when game not disabled", async () => {
             // arrange
-            const player = { UID: 1 };
+            const player = { UID: "1" };
             consumer.getUserInfo = jest.fn().mockReturnValue(player);
             const roundId = 1;
             const roundHistory = [
@@ -60,6 +67,8 @@ describe("InGameConsumer tests", () => {
             const realPlayer = { profile: { name: "player" }, session: { currencyCode: "USD", multiplier: 1, currencyGroupId: "group" } };
             consumer.gameData.remainingTime = 60;
             consumer.getResultHash = jest.fn().mockReturnValue({});
+            (BetCountHelper.calculateBetPercentage as jest.Mock).mockReturnValueOnce({ choice1: 100 });
+            (BetCountHelper.calculatePlayerBetCount as jest.Mock).mockReturnValueOnce({ choice1: 1 });
             const expected = {
                 roundId,
                 roundData: { drawId: 2 },
@@ -80,6 +89,8 @@ describe("InGameConsumer tests", () => {
                 resultHash: {},
                 players,
                 chips,
+                betPercentage: { choice1: 100 },
+                playerBetCount: { choice1: 1 },
                 remainingTime: 60,
             };
 

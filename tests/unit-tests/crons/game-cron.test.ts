@@ -53,10 +53,14 @@ describe("GameCron tests", () => {
             consumer.initResultHash = jest.fn();
             consumer.getSettingForNewRound = jest.fn();
             consumer.updateExchangeRates = jest.fn();
+            consumer.checkGameStatus = jest.fn();
         });
         it("should run correctly", async () => {
             // arrange
             consumer.initLastRound = jest.fn();
+            consumer.gameData.disabled = false;
+            consumer.initRemainingTime = jest.fn();
+
             // act
             await consumer.start();
 
@@ -66,6 +70,8 @@ describe("GameCron tests", () => {
             expect(consumer.getSettingForNewRound).toHaveBeenCalled();
             expect(consumer.updateExchangeRates).toHaveBeenCalled();
             expect(consumer.initLastRound).toHaveBeenCalled();
+            expect(consumer.checkGameStatus).toHaveBeenCalled();
+            expect(consumer.initRemainingTime).toHaveBeenCalled();
             expect(consumer.startCron).toHaveBeenCalled();
         });
 
@@ -88,6 +94,31 @@ describe("GameCron tests", () => {
             expect((consumer.definition as GameDefinition).getProbabilities).toHaveBeenCalledWith(unfinishedRound.result);
             expect(getBetOdds).toHaveBeenCalledWith({}, consumer.gameData.gameConfigs.margin);
             expect((consumer.gameData as GameData).odds).toEqual({ choice1: 2 });
+        });
+
+        describe("initRemainingTime", () => {
+            beforeEach(() => {
+                consumer.initLastRound = jest.fn();
+                (consumer.definition as GameDefinition).numberOfTurnsPerRound = 4;
+                consumer.definition.durations = durations as any;
+                consumer.gameData.disabled = false;
+            });
+            const testCases = [
+                { drawId: 5, expectedRemainingTime: 134 },
+                { drawId: 6, expectedRemainingTime: 99 },
+                { drawId: 7, expectedRemainingTime: 66 },
+                { drawId: 8, expectedRemainingTime: 33 },
+            ];
+            it.each(testCases)("should set correctly remaining time", async ({ drawId, expectedRemainingTime }) => {
+                // arrange
+                (consumer.gameData as GameData).drawId = drawId;
+
+                // act
+                await consumer.start();
+
+                // assert
+                expect(gameData.remainingTime).toBe(expectedRemainingTime);
+            });
         });
     });
 
@@ -113,32 +144,19 @@ describe("GameCron tests", () => {
             expect(consumer.checkGameStatus).toHaveBeenCalled();
         });
 
-        describe("initRemainingTime", () => {
-            beforeEach(() => {
-                consumer.initLastRound = jest.fn();
-                (consumer.definition as GameDefinition).numberOfTurnsPerRound = 4;
-                Table.Crons.TableGameCron.prototype.checkGameStatus = jest.fn();
-                consumer.gameData.disabled = false;
-            });
-            afterEach(() => {
-                jest.clearAllMocks();
-            });
-            const testCases = [
-                { drawId: 5, expectedRemainingTime: 134 },
-                { drawId: 6, expectedRemainingTime: 99 },
-                { drawId: 7, expectedRemainingTime: 66 },
-                { drawId: 8, expectedRemainingTime: 33 },
-            ];
-            it.each(testCases)("should set correctly remaining time", async ({ drawId, expectedRemainingTime }) => {
+        describe("when changing round time", () => {
+            it.each([133, 134])("should not do anything", async (remainingTime) => {
                 // arrange
-                (consumer.gameData as GameData).drawId = drawId;
-                consumer.gameData.remainingTime = durations.wholeRound;
+                consumer.isStartingTime = jest.fn();
+                consumer.checkGameStatus = jest.fn();
+                consumer.gameData.disabled = false;
+                consumer.gameData.remainingTime = remainingTime;
 
                 // act
-                await consumer.checkGameStatus();
+                await consumer.proceed();
 
                 // assert
-                expect(gameData.remainingTime).toBe(expectedRemainingTime);
+                expect(consumer.isStartingTime).not.toHaveBeenCalled();
             });
         });
 
@@ -168,6 +186,18 @@ describe("GameCron tests", () => {
 
                 // assert
                 expect(Table.Crons.TableGameCron.prototype.resetForNewRound).toHaveBeenCalled();
+            });
+
+            it.each(testCases)("should reset playerBetCount", async ({ remainingTime }) => {
+                // arrange
+                consumer.gameData.remainingTime = remainingTime;
+                (consumer.gameData as GameData).playerBetCount = { choice1: ["123"] };
+
+                // act
+                await consumer.proceed();
+
+                // assert
+                expect(gameData.playerBetCount).toEqual({});
             });
 
             it.each(testCases)("should call bot reset", async ({ remainingTime }) => {

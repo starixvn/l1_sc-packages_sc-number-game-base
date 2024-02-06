@@ -3,18 +3,21 @@ import { TableInGameConsumer } from "sc-game-base/src/table/event-consumers";
 import GameDefinition from "../game-definition";
 import RoundQuery from "../query-apis/round-query";
 import GameData from "../game-data";
+import { BetCountHelper } from "../helpers";
 
 export default class InGameConsumer extends TableInGameConsumer {
     async buildPayload(realPlayer: any) {
         const user = await this.getUserInfo(realPlayer);
         const roundHistory = await this.getRoundsHistory();
 
-        const { totalBets, roundId, exchangeRates, chips, gameConfigs, odds, drawId } = this.gameData as GameData;
+        const { totalBets, roundId, exchangeRates, chips, gameConfigs, odds, drawId, playerBetCount } = this.gameData as GameData;
         const { session } = realPlayer;
         const rate = exchangeRates.code[session.currencyCode] * session.multiplier;
         const configs = this.getGameConfigs(session.currencyGroupId);
         const { ownBets } = this.gameData.ingame[realPlayer.profile.name] || { ownBets: {} };
         const players = realPlayer.session?.system === Systems.Mobi ? {} : this.buildPlayersPayload(realPlayer);
+        const betPercentage = BetCountHelper.calculateBetPercentage(playerBetCount);
+        const betCount = BetCountHelper.calculatePlayerBetCount(playerBetCount);
 
         const payload = {
             roundId,
@@ -29,6 +32,8 @@ export default class InGameConsumer extends TableInGameConsumer {
             resultHash: this.getResultHash(),
             players,
             chips,
+            betPercentage,
+            playerBetCount: betCount,
         };
 
         const disabled = !gameConfigs?.enabled;

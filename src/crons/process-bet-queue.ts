@@ -12,6 +12,7 @@ type BetPayload = {
 };
 
 export default class ProcessBetQueue extends TableProcessBetQueue {
+    declare gameData: GameData;
     formatApiBetInfo(payload: BetPayload) {
         return {
             amount: payload.amount,
@@ -40,7 +41,7 @@ export default class ProcessBetQueue extends TableProcessBetQueue {
 
         return [
             {
-                failure: drawId !== (this.gameData as GameData).drawId,
+                failure: drawId !== this.gameData.drawId,
                 notice: { errorCode: helpers.noticeHelper.placeBetNextRound },
             },
             {
@@ -79,7 +80,7 @@ export default class ProcessBetQueue extends TableProcessBetQueue {
     }
 
     async upsertBet(player: any, drawId: number, bet: BetPayload, rate: number) {
-        const { odds, roundId } = this.gameData as GameData;
+        const { odds, roundId } = this.gameData;
         const newBet: any = {
             uid: player.UID,
             name: player.profile.name,
@@ -111,11 +112,24 @@ export default class ProcessBetQueue extends TableProcessBetQueue {
         );
     }
 
-    adjustTotalBets(_: any, bet: BetPayload, rate: number): void {
+    adjustTotalBets(player: any, bet: BetPayload, rate: number): void {
         const { betChoices } = bet;
 
         Object.keys(betChoices).forEach((choice) => {
             this.gameData.totalBets[choice] = (this.gameData.totalBets[choice] ?? 0) + betChoices[choice] * rate;
+        });
+
+        this.adjustPlayerBetCount(player, bet);
+    }
+
+    adjustPlayerBetCount(player: any, bet: BetPayload) {
+        Object.keys(bet.betChoices).forEach((betChoice) => {
+            if (this.definition.choices.includes(betChoice)) {
+                if (!this.gameData.playerBetCount[betChoice]) {
+                    this.gameData.playerBetCount[betChoice] = [];
+                }
+                !this.gameData.playerBetCount[betChoice].includes(player.UID) && this.gameData.playerBetCount[betChoice].push(player.UID);
+            }
         });
     }
 

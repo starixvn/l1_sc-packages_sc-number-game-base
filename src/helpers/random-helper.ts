@@ -40,7 +40,7 @@ export const randomModes: any = {
     3: [random1, random2, random5, random6],
 };
 
-export default (randomMode: number, numberOfPicked: number, numberOfSeeds: number, excludeNumbers: number[] = []) => {
+export default (randomMode: number, numberOfPicked: number, numberOfSeeds: number, excludeNumbers: number[] = []): number[] => {
     const randomShuffles: Function[] = randomModes[randomMode] || randomModes[1];
     return chance.pickone(randomShuffles)(numberOfPicked, numberOfSeeds, excludeNumbers);
 };

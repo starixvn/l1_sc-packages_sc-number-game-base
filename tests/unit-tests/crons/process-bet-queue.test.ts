@@ -63,7 +63,7 @@ describe("ProcessBetQueue tests", () => {
 
     describe("composeValidationCriteria", () => {
         beforeEach(() => {
-            (consumer.gameData as GameData).drawId = 8;
+            consumer.gameData.drawId = 8;
             (consumer.definition as GameDefinition).numberOfTurnsPerRound = 4;
             const durations = {
                 wholeRound: 134,
@@ -195,7 +195,7 @@ describe("ProcessBetQueue tests", () => {
             consumer.betsRepository = { updateOne: jest.fn() };
             consumer.gameData.roundId = 1;
             const odds = { choice1: 2, choice2: 10 };
-            (consumer.gameData as GameData).odds = odds;
+            consumer.gameData.odds = odds;
             const existingBetFilter = { uid: player.UID, roundId: 1, drawId, freeBet: bet.freeBet };
             const existingBetIncrement = {
                 choice1: 10,
@@ -230,16 +230,32 @@ describe("ProcessBetQueue tests", () => {
     });
 
     describe("adjustTotalBets", () => {
+        const bet = { betChoices: { choice1: 10, choice2: 20 } };
+
         it("should adjust correctly total bet in gameData", () => {
             // arrange
+            consumer.adjustPlayerBetCount = jest.fn();
             consumer.gameData.totalBets = { choice2: 30, choice3: 10 };
-            const bet = { betChoices: { choice1: 10, choice2: 20 } };
 
             // act
             consumer.adjustTotalBets({}, bet as any, 10);
 
             // assert
             expect(gameData.totalBets).toEqual({ choice1: 100, choice2: 230, choice3: 10 });
+        });
+
+        it("should adjust correctly player bet count", () => {
+            // arrange
+            consumer.gameData.totalBets = { choice2: 30, choice3: 10 };
+            consumer.definition.choices = ["choice1", "choice2", "choice3"];
+            const player = { UID: "123" };
+            consumer.gameData.playerBetCount = { choice1: ["321"], choice2: ["123"] };
+
+            // act
+            consumer.adjustTotalBets(player, bet as any, 10);
+
+            // assert
+            expect(gameData.playerBetCount).toEqual({ choice1: ["321", "123"], choice2: ["123"] });
         });
     });
 
@@ -283,8 +299,8 @@ describe("ProcessBetQueue tests", () => {
 
         it("should return expected", () => {
             // arrange
-            (consumer.gameData as GameData).players = {};
-            (consumer.gameData as GameData).chips = {};
+            consumer.gameData.players = {};
+            consumer.gameData.chips = {};
             const expected = {
                 ownBets: betChoices,
                 endBet: 30,
@@ -305,7 +321,7 @@ describe("ProcessBetQueue tests", () => {
         it("should update game data chips correctly when chips existed", () => {
             // arrange
             const rate = 1;
-            (consumer.gameData as GameData).chips = { [rate]: { choice1: { 10: 1 }, choice2: { 1: 5 } } };
+            consumer.gameData.chips = { [rate]: { choice1: { 10: 1 }, choice2: { 1: 5 } } };
             const bet = { betChoices: { choice1: 10, choice2: 1 } };
 
             // act
@@ -318,7 +334,7 @@ describe("ProcessBetQueue tests", () => {
         it("should create game data chips when chips not exist", () => {
             // arrange
             const rate = 1;
-            (consumer.gameData as GameData).chips = {};
+            consumer.gameData.chips = {};
             const bet = { betChoices: { choice1: 10, choice2: 1 } };
 
             // act
