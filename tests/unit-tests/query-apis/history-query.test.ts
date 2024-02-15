@@ -16,6 +16,10 @@ describe("RoundQuery tests", () => {
                     betwin: 5,
                     paid: true,
                     time: new Date(2024, 1, 1),
+                    odds: {
+                        player: 1.5,
+                        banker: 2
+                    }
                 },
                 {
                     _id: 2,
@@ -28,6 +32,10 @@ describe("RoundQuery tests", () => {
                     betwin: 5,
                     paid: true,
                     time: new Date(2024, 1, 1),
+                    odds: {
+                        player: 1.25,
+                        banker: 1.75
+                    }
                 },
                 {
                     _id: 3,
@@ -40,6 +48,10 @@ describe("RoundQuery tests", () => {
                     betwin: 5,
                     paid: true,
                     time: new Date(2024, 2, 1),
+                    odds: {
+                        player: 1.5,
+                        banker: 1.5
+                    }
                 }
             ];
             const betLogs = [
@@ -123,6 +135,10 @@ describe("RoundQuery tests", () => {
                                     choice: "player",
                                 },
                             ],
+                            odds: {
+                                player: 1.5,
+                                banker: 2
+                            }
                         },
                         {
                             drawId: 2,
@@ -142,6 +158,10 @@ describe("RoundQuery tests", () => {
                                     choice: "banker",
                                 },
                             ],
+                            odds: {
+                                player: 1.25,
+                                banker: 1.75
+                            }
                         },
                         {
                             drawId: 3,
@@ -161,6 +181,10 @@ describe("RoundQuery tests", () => {
                                     choice: "tie",
                                 },
                             ],
+                            odds: {
+                                player: 1.5,
+                                banker: 1.5
+                            }
                         }
                     ],
                     page: 1,

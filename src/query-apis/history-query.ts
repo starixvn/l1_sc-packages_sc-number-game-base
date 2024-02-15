@@ -39,6 +39,7 @@ export default class HistoryQuery extends Core.QueryApis.HistoryQuery {
                         betwin: currentDrawBet.betwin,
                         time: currentDrawBet.time,
                         betLogDetails: betLogDetails,
+                        odds: currentDrawBet.odds
                     };
                 }
             ));
