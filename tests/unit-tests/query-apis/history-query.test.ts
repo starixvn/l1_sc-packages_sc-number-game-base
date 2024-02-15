@@ -12,9 +12,6 @@ describe("RoundQuery tests", () => {
                     playerId: 1,
                     roundId: 1,
                     drawId: 1,
-                    player: 34,
-                    banker: 12,
-                    tie: 0,
                     totalAmount: 10,
                     betwin: 5,
                     paid: true,
@@ -27,9 +24,6 @@ describe("RoundQuery tests", () => {
                     playerId: 1,
                     roundId: 1,
                     drawId: 2,
-                    player: 33,
-                    banker: 22,
-                    tie: 0,
                     totalAmount: 10,
                     betwin: 5,
                     paid: true,
@@ -42,9 +36,6 @@ describe("RoundQuery tests", () => {
                     playerId: 1,
                     roundId: 2,
                     drawId: 3,
-                    player: 39,
-                    banker: 22,
-                    tie: 0,
                     totalAmount: 10,
                     betwin: 5,
                     paid: true,
@@ -73,20 +64,20 @@ describe("RoundQuery tests", () => {
                     _id: 1,
                     id: 1,
                     result: [
-                        { drawId: 1, choice1: 1, choice2: 2 },
-                        { drawId: 2, choice1: 2, choice2: 3 },
+                        { drawId: 1, player: 34, banker: 12 },
+                        { drawId: 2, player: 33, banker: 22 },
                     ],
                     settlementResult: [
-                        { drawId: 1, choice1: false, choice2: true },
-                        { drawId: 2, choice1: false, choice2: true },
+                        { drawId: 1, player: true, banker: false },
+                        { drawId: 2, player: true, banker: false },
                     ],
                     time: new Date(2024, 1, 1),
                 },
                 {
                     _id: 2,
                     id: 2,
-                    result: [{ drawId: 5, choice1: 2, choice2: 1 }],
-                    settlementResult: [{ drawId: 5, choice1: true, choice2: false }],
+                    result: [{ drawId: 3, player: 39, banker: 22 }],
+                    settlementResult: [{ drawId: 5, player: true, banker: false }],
                     time: new Date(2024, 2, 1),
                 },
             ];
@@ -106,76 +97,72 @@ describe("RoundQuery tests", () => {
                 find: ({ roundId, drawId }: { roundId: number; drawId: number }, _: any, __: any) => {
                     return {
                         lean: jest.fn().mockReturnValue({
-                            exec: () => Promise.resolve(betLogs.filter((betLog) => betLog.roundId === roundId && betLog.drawId === drawId)),
+                            exec: () => Promise.resolve(betLogs.filter((betLog) => betLog.drawId === drawId)),
                         }),
                     };
                 },
             };
             const expected = {
                 history: {
-                    betLogsGrouped: {
-                        1: [
-                            {
+                    betLogs: [
+                        {
+                            drawId: 1,
+                            result: {
                                 drawId: 1,
-                                result: {
-                                    player: 34,
-                                    banker: 12,
-                                    tie: 0,
-                                },
-                                totalAmount: 10,
-                                roundId: 1,
-                                betwin: 5,
-                                time: new Date(2024, 1, 1),
-                                betDetails: [
-                                    {
-                                        roundId: 1,
-                                        drawId: 1,
-                                        choice: "player",
-                                    },
-                                ],
+                                player: 34,
+                                banker: 12,
                             },
-                            {
+                            totalAmount: 10,
+                            roundId: 1,
+                            betwin: 5,
+                            time: new Date(2024, 1, 1),
+                            betLogDetails: [
+                                {
+                                    roundId: 1,
+                                    drawId: 1,
+                                    choice: "player",
+                                },
+                            ],
+                        },
+                        {
+                            drawId: 2,
+                            result: {
                                 drawId: 2,
-                                result: {
-                                    player: 33,
-                                    banker: 22,
-                                    tie: 0,
-                                },
-                                totalAmount: 10,
-                                betwin: 5,
-                                roundId: 1,
-                                time: new Date(2024, 1, 1),
-                                betDetails: [
-                                    {
-                                        roundId: 1,
-                                        drawId: 2,
-                                        choice: "banker",
-                                    },
-                                ],
+                                player: 33,
+                                banker: 22
                             },
-                        ],
-                        2: [
-                            {
+                            totalAmount: 10,
+                            betwin: 5,
+                            roundId: 1,
+                            time: new Date(2024, 1, 1),
+                            betLogDetails: [
+                                {
+                                    roundId: 1,
+                                    drawId: 2,
+                                    choice: "banker",
+                                },
+                            ],
+                        },
+                        {
+                            drawId: 3,
+                            result: {
                                 drawId: 3,
-                                result: {
-                                    player: 39,
-                                    banker: 22,
-                                    tie: 0,
-                                },
-                                totalAmount: 10,
-                                betwin: 5,
-                                roundId: 2,
-                                time: new Date(2024, 2, 1),
-                                betDetails: [
-                                    {
-                                        roundId: 2,
-                                        drawId: 3,
-                                        choice: "tie",
-                                    },
-                                ],
+                                player: 39,
+                                banker: 22,
                             },
-                        ],
-                    },
+                            totalAmount: 10,
+                            betwin: 5,
+                            roundId: 2,
+                            time: new Date(2024, 2, 1),
+                            betLogDetails: [
+                                {
+                                    roundId: 2,
+                                    drawId: 3,
+                                    choice: "tie",
+                                },
+                            ],
+                        }
+                    ],
                     page: 1,
                     pageSize: 3,
                     total: 3,

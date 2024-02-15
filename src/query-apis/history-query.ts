@@ -26,44 +26,31 @@ export default class HistoryQuery extends Core.QueryApis.HistoryQuery {
             .lean()
             .exec();
         let betLogs: any[] = [];
-        let betLogsGrouped = {};
         if (bets && bets.length > 0) {
             betLogs = await Promise.all(
                 bets.map(async (currentDrawBet: any) => {
-                    const betDetails = await this.getBetLogDetailsEachDraw(player, currentDrawBet.roundId, currentDrawBet.drawId);
+                    const betLogDetails = await this.getBetLogDetailsEachDraw(player, currentDrawBet.drawId);
+                    const drawResult = await this.getDrawResult(currentDrawBet.roundId, currentDrawBet.drawId);
                     return {
                         roundId: currentDrawBet.roundId,
                         drawId: currentDrawBet.drawId,
-                        result: {
-                            player: currentDrawBet.player,
-                            banker: currentDrawBet.banker,
-                            tie: currentDrawBet.tie,
-                        },
+                        result: drawResult,
                         totalAmount: currentDrawBet.totalAmount,
                         betwin: currentDrawBet.betwin,
                         time: currentDrawBet.time,
-                        betDetails: betDetails,
+                        betLogDetails: betLogDetails,
                     };
                 }
             ));
-            betLogs.sort((a, b) => b.time - a.time);
-            betLogsGrouped = betLogs.reduce((acc, cur) => {
-                return {
-                    ...acc,
-                    [cur.roundId]: [
-                        ...(acc[cur.roundId] || []), cur
-                    ]
-                }
-            }, {});
         }
 
-        return { history: { betLogsGrouped, page, pageSize, total } };
+        return { history: { betLogs, page, pageSize, total } };
     }
 
-    getBetLogDetailsEachDraw(player: any, roundId: any, drawId: any) {
+    getBetLogDetailsEachDraw(player: any, drawId: any) {
         return this.betLogsRepository
             .find(
-                { roundId, uid: player.UID, drawId },
+                { uid: player.UID, drawId },
                 { _id: false, time: true, choice: true, amount: true, select: true, bet: true },
                 { sort: { _id: -1 } }
             )
@@ -71,9 +58,9 @@ export default class HistoryQuery extends Core.QueryApis.HistoryQuery {
             .exec();
     }
 
-    async getRoundTime(roundId: any): Promise<any> {
-        const round = await this.roundQuery.getOne(roundId);
-        return round.time;
+    async getDrawResult(roundId: any, drawId: any) {
+        const round = await this.roundQuery.getOne(roundId, { _id: false });
+        return round.result.find((e: any) => e.drawId === drawId);
     }
 }
 
