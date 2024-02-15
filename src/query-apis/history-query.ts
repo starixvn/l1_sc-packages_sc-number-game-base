@@ -30,11 +30,12 @@ export default class HistoryQuery extends Core.QueryApis.HistoryQuery {
             betLogs = await Promise.all(
                 bets.map(async (currentDrawBet: any) => {
                     const betLogDetails = await this.getBetLogDetailsEachDraw(player, currentDrawBet.drawId);
-                    const drawResult = await this.getDrawResult(currentDrawBet.roundId, currentDrawBet.drawId);
+                    const drawResults = await this.getDrawResults(currentDrawBet.roundId, currentDrawBet.drawId);
                     return {
                         roundId: currentDrawBet.roundId,
                         drawId: currentDrawBet.drawId,
-                        result: drawResult,
+                        result: drawResults.result,
+                        settlementResult: drawResults.settlementResult,
                         totalAmount: currentDrawBet.totalAmount,
                         betwin: currentDrawBet.betwin,
                         time: currentDrawBet.time,
@@ -48,7 +49,7 @@ export default class HistoryQuery extends Core.QueryApis.HistoryQuery {
         return { history: { betLogs, page, pageSize, total } };
     }
 
-    getBetLogDetailsEachDraw(player: any, drawId: any) {
+    getBetLogDetailsEachDraw(player: any, drawId: number) {
         return this.betLogsRepository
             .find(
                 { uid: player.UID, drawId },
@@ -59,9 +60,11 @@ export default class HistoryQuery extends Core.QueryApis.HistoryQuery {
             .exec();
     }
 
-    async getDrawResult(roundId: any, drawId: any) {
+    async getDrawResults(roundId: number, drawId: number) {
         const round = await this.roundQuery.getOne(roundId, { _id: false });
-        return round.result.find((e: any) => e.drawId === drawId);
+        const result = round.result.find((e: any) => e.drawId === drawId);
+        const settlementResult = round.settlementResult.find((e: any) => e.drawId === drawId);
+        return { result, settlementResult };
     }
 }
 

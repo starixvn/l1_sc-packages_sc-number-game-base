@@ -1,7 +1,7 @@
 import { Table } from "sc-game-base";
 import GameData from "../game-data";
 import GameDefinition from "../game-definition";
-import { getFilterObjectWithAllowedKeys, getBetOdds } from "../helpers";
+import { getFilterObjectWithAllowedKeys } from "../helpers";
 import { RoundResultPublisher } from "../event-publishers";
 
 export type FinishDraw = {

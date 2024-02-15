@@ -89,7 +89,7 @@ describe("RoundQuery tests", () => {
                     _id: 2,
                     id: 2,
                     result: [{ drawId: 3, player: 39, banker: 22 }],
-                    settlementResult: [{ drawId: 5, player: true, banker: false }],
+                    settlementResult: [{ drawId: 3, player: true, banker: false }],
                     time: new Date(2024, 2, 1),
                 },
             ];
@@ -124,6 +124,7 @@ describe("RoundQuery tests", () => {
                                 player: 34,
                                 banker: 12,
                             },
+                            settlementResult: { drawId: 1, player: true, banker: false },
                             totalAmount: 10,
                             roundId: 1,
                             betwin: 5,
@@ -147,6 +148,7 @@ describe("RoundQuery tests", () => {
                                 player: 33,
                                 banker: 22
                             },
+                            settlementResult: { drawId: 2, player: true, banker: false },
                             totalAmount: 10,
                             betwin: 5,
                             roundId: 1,
@@ -170,6 +172,7 @@ describe("RoundQuery tests", () => {
                                 player: 39,
                                 banker: 22,
                             },
+                            settlementResult: { drawId: 3, player: true, banker: false },
                             totalAmount: 10,
                             betwin: 5,
                             roundId: 2,
