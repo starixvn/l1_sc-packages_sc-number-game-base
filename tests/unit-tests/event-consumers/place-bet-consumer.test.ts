@@ -86,6 +86,31 @@ describe("PlaceBetConsumer test", () => {
                 expect(actual.failure).toBe(true);
             });
         });
+
+        describe("should valid bet", () => {
+            const testCases = [
+                { remainingTime: 4, drawId: 8 },
+                { remainingTime: 24, drawId: 8 },
+                { remainingTime: 37, drawId: 7 },
+                { remainingTime: 57, drawId: 7 },
+                { remainingTime: 70, drawId: 6 },
+                { remainingTime: 90, drawId: 6 },
+                { remainingTime: 103, drawId: 5 },
+                { remainingTime: 120, drawId: 5 },
+            ];
+            it.each(testCases)("should return failure", ({ remainingTime, drawId }) => {
+                // arrange
+                consumer.gameData.remainingTime = remainingTime;
+                (consumer.gameData as any).drawId = drawId;
+
+                // act
+                const actual = consumer.composeBettingTimeValidationCriteria(1);
+
+                // assert
+                expect(actual[1].failure).toBe(false);
+                expect(actual[2].failure).toBe(false);
+            });
+        });
     });
     describe("composeBetAmountValidationCriteria", () => {
         const player = { profile: { name: "user", minBet: 10, maxBet: 50 }, session: { currencyGroupId: "A" } };

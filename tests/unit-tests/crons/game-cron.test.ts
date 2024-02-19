@@ -53,13 +53,11 @@ describe("GameCron tests", () => {
             consumer.initResultHash = jest.fn();
             consumer.getSettingForNewRound = jest.fn();
             consumer.updateExchangeRates = jest.fn();
-            consumer.checkGameStatus = jest.fn();
         });
         it("should run correctly", async () => {
             // arrange
             consumer.initLastRound = jest.fn();
             consumer.gameData.disabled = false;
-            consumer.initRemainingTime = jest.fn();
 
             // act
             await consumer.start();
@@ -70,8 +68,6 @@ describe("GameCron tests", () => {
             expect(consumer.getSettingForNewRound).toHaveBeenCalled();
             expect(consumer.updateExchangeRates).toHaveBeenCalled();
             expect(consumer.initLastRound).toHaveBeenCalled();
-            expect(consumer.checkGameStatus).toHaveBeenCalled();
-            expect(consumer.initRemainingTime).toHaveBeenCalled();
             expect(consumer.startCron).toHaveBeenCalled();
         });
 
@@ -95,31 +91,6 @@ describe("GameCron tests", () => {
             expect(getBetOdds).toHaveBeenCalledWith({}, consumer.gameData.gameConfigs.margin);
             expect((consumer.gameData as GameData).odds).toEqual({ choice1: 2 });
         });
-
-        describe("initRemainingTime", () => {
-            beforeEach(() => {
-                consumer.initLastRound = jest.fn();
-                (consumer.definition as GameDefinition).numberOfTurnsPerRound = 4;
-                consumer.definition.durations = durations as any;
-                consumer.gameData.disabled = false;
-            });
-            const testCases = [
-                { drawId: 5, expectedRemainingTime: 134 },
-                { drawId: 6, expectedRemainingTime: 99 },
-                { drawId: 7, expectedRemainingTime: 66 },
-                { drawId: 8, expectedRemainingTime: 33 },
-            ];
-            it.each(testCases)("should set correctly remaining time", async ({ drawId, expectedRemainingTime }) => {
-                // arrange
-                (consumer.gameData as GameData).drawId = drawId;
-
-                // act
-                await consumer.start();
-
-                // assert
-                expect(gameData.remainingTime).toBe(expectedRemainingTime);
-            });
-        });
     });
 
     describe("proceed", () => {
@@ -132,16 +103,51 @@ describe("GameCron tests", () => {
         afterEach(() => {
             jest.clearAllMocks();
         });
-        it("should call checkGameStatus when remainingTime === wholeRound", async () => {
-            // arrange
-            consumer.checkGameStatus = jest.fn();
-            consumer.gameData.remainingTime = durations.wholeRound;
+        describe("when remaining = wholeRound", () => {
+            it("should call checkGameStatus when remainingTime === wholeRound", async () => {
+                // arrange
+                consumer.checkGameStatus = jest.fn();
+                consumer.gameData.remainingTime = durations.wholeRound;
 
-            // act
-            await consumer.proceed();
+                // act
+                await consumer.proceed();
 
-            // assert
-            expect(consumer.checkGameStatus).toHaveBeenCalled();
+                // assert
+                expect(consumer.checkGameStatus).toHaveBeenCalled();
+            });
+            describe("initRemainingTime", () => {
+                beforeEach(() => {
+                    consumer.initLastRound = jest.fn();
+                    (consumer.definition as GameDefinition).numberOfTurnsPerRound = 4;
+                    consumer.definition.durations = durations as any;
+                    consumer.gameData.remainingTime = durations.wholeRound;
+                    consumer.gameData.disabled = false;
+                    consumer.checkGameStatus = jest.fn();
+                    consumer.isChangingRoundTime = jest.fn().mockReturnValue(false);
+                    consumer.isStartingTime = jest.fn().mockReturnValue(false);
+                    consumer.isStartingGenerateResultTime = jest.fn().mockReturnValue(false);
+                    consumer.isStartingBetTime = jest.fn().mockReturnValue(false);
+                    consumer.isStartingLockTime = jest.fn().mockReturnValue(false);
+                    consumer.isSettlingTime = jest.fn().mockReturnValue(false);
+                    consumer.isDuringBetTime = jest.fn().mockReturnValue(false);
+                });
+                const testCases = [
+                    { drawId: 5, expectedRemainingTime: 134 },
+                    { drawId: 6, expectedRemainingTime: 98 },
+                    { drawId: 7, expectedRemainingTime: 65 },
+                    { drawId: 8, expectedRemainingTime: 32 },
+                ];
+                it.each(testCases)("should set correctly remaining time", async ({ drawId, expectedRemainingTime }) => {
+                    // arrange
+                    (consumer.gameData as GameData).drawId = drawId;
+
+                    // act
+                    await consumer.proceed();
+
+                    // assert
+                    expect(gameData.remainingTime + 1).toBe(expectedRemainingTime);
+                });
+            });
         });
 
         describe("when changing round time", () => {
@@ -149,6 +155,7 @@ describe("GameCron tests", () => {
                 // arrange
                 consumer.isStartingTime = jest.fn();
                 consumer.checkGameStatus = jest.fn();
+                consumer.initRemainingTime = jest.fn();
                 consumer.gameData.disabled = false;
                 consumer.gameData.remainingTime = remainingTime;
 

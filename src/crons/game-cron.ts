@@ -68,21 +68,12 @@ export default class GameCron extends Table.Crons.TableGameCron {
         await this.getSettingForNewRound();
         await this.updateExchangeRates();
         await this.initLastRound();
-        await this.checkGameStatus();
-        !this.gameData.disabled && this.initRemainingTime();
         this.startCron();
     }
 
     async initLastRound() {
         const unfinishedRound = await this.getUnfinishedRound();
         this.generateRoundData(unfinishedRound);
-    }
-
-    initRemainingTime() {
-        const numberOfTurnsPerRound = (this.definition as GameDefinition).numberOfTurnsPerRound;
-        const turn = (this.gameData as GameData).drawId % numberOfTurnsPerRound || numberOfTurnsPerRound;
-        const { wholeRound, wholeTurn, startingRound } = this.definition.durations as Duration;
-        this.gameData.remainingTime = turn === 1 ? wholeRound : wholeRound - startingRound - wholeTurn * (turn - 1);
     }
 
     async getUnfinishedRound() {
@@ -108,6 +99,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
 
         if (this.gameData.remainingTime === wholeRound) {
             await this.checkGameStatus();
+            !this.gameData.disabled && this.initRemainingTime();
         }
 
         if (!this.gameData.disabled) {
@@ -146,6 +138,13 @@ export default class GameCron extends Table.Crons.TableGameCron {
             this.bot && (await this.bot.run());
             this.runningRoundInfoPublisher.publish();
         }
+    }
+
+    initRemainingTime() {
+        const numberOfTurnsPerRound = (this.definition as GameDefinition).numberOfTurnsPerRound;
+        const turn = (this.gameData as GameData).drawId % numberOfTurnsPerRound || numberOfTurnsPerRound;
+        const { wholeRound, wholeTurn, startingRound } = this.definition.durations as Duration;
+        this.gameData.remainingTime = turn === 1 ? wholeRound : wholeRound - startingRound - wholeTurn * (turn - 1) - 1;
     }
 
     async startTurn(remainingTime: number) {
