@@ -10,5 +10,7 @@ export const getBetOdds = (probabilities: Record<string, number>, margins: Recor
 };
 
 export const probabilityToBetOdds = (prob: number, margin = 0) => {
-    return (1 - margin) / prob;
+    const odds = (1 - margin) / prob;
+
+    return odds > 20 ? Math.floor(odds) : Number((Math.floor(odds * 100) / 100).toFixed(2));
 };
