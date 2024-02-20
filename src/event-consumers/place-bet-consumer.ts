@@ -116,6 +116,7 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
             drawId: +payload.drawId || (this.gameData as GameData).drawId,
             mode: payload.m ?? this.DisplayMode.Landscape,
             receivedTime: new Date(),
+            freeBet: payload.freeBet ?? false,
         });
 
         const { amount, betChoices, freeBet, drawId } = payload;
