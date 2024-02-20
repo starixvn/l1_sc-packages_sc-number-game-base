@@ -257,7 +257,7 @@ describe("PlaceBetConsumer test", () => {
             consumer.consume({}, payload);
 
             // assert
-            expect(consumer.validateBetRequest).toHaveBeenCalledWith({}, payload.betChoices, 30, undefined, 1);
+            expect(consumer.validateBetRequest).toHaveBeenCalledWith({}, payload.betChoices, 30, false, 1);
         });
     });
     describe("anyChoiceExceedItsMaxBet", () => {
@@ -298,6 +298,33 @@ describe("PlaceBetConsumer test", () => {
 
             // assert
             expect(actual).toBe(expected);
+        });
+    });
+
+    describe("adjustBetTracks", () => {
+        it("should adjust betTracks when betTracks is empty object", () => {
+            // arrange
+            const playerName = "player";
+            const bet = { betChoices: { choice1: 1, choice2: 1 } };
+            consumer.gameData.ingame = { [playerName]: { betTracks: {} } };
+
+            // act
+            consumer.adjustBetTracks(playerName, bet as any);
+
+            // assert
+            expect(consumer.gameData.ingame[playerName].betTracks).toEqual({ choice1: 1, choice2: 1 });
+        });
+        it("should adjust betTracks when betTracks is not empty object", () => {
+            // arrange
+            const playerName = "player";
+            const bet = { betChoices: { choice1: 1, choice2: 1 } };
+            consumer.gameData.ingame = { [playerName]: { betTracks: { choice1: 1 } } };
+
+            // act
+            consumer.adjustBetTracks(playerName, bet as any);
+
+            // assert
+            expect(consumer.gameData.ingame[playerName].betTracks).toEqual({ choice1: 2, choice2: 1 });
         });
     });
 });

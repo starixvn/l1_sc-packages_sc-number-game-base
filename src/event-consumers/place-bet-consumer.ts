@@ -143,6 +143,18 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
         this.gameData.ingame[name].betQueue.push({ player, payload });
     }
 
+    adjustBetTracks(playerName: any, bet: BetPayload) {
+        const { betChoices } = bet;
+
+        if (this.gameData.ingame?.[playerName]) {
+            const playerInGame = this.gameData.ingame[playerName];
+
+            Object.keys(betChoices).forEach((betChoice) => {
+                playerInGame.betTracks[betChoice] = (playerInGame.betTracks[betChoice] ?? 0) + betChoices[betChoice];
+            });
+        }
+    }
+
     anyChoiceExceedItsMaxBet(betChoices: Record<string, number>, betTracks: Record<string, number>, configs: any, userMaxBet: number) {
         return Object.keys(betChoices).some((choice) => {
             const maxBetPerChoice = Math.min(userMaxBet, configs.maxBetPerChoices[choice] ?? 0);
