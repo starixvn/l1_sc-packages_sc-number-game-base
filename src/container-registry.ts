@@ -2,7 +2,7 @@ import { asClass } from "awilix";
 import { Table } from "sc-game-base";
 import { InGameConsumer, PlaceBetConsumer, RoundIdConsumer, SettleGameRoundConsumer } from "./event-consumers";
 import { GameCron, ProcessBetQueue } from "./crons";
-import { RoundResultPublisher } from "./event-publishers";
+import { RoundResultPublisher, RunningRoundInfoPublisher } from "./event-publishers";
 import { HistoryQuery, RoundQuery } from "./query-apis";
 
 export default class ContainerRegistry extends Table.TableContainerRegistry {
@@ -10,7 +10,7 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
         super.registerApis();
         this.container.register({
             roundQuery: asClass(RoundQuery).singleton(),
-            historyQuery: asClass(HistoryQuery).singleton()
+            historyQuery: asClass(HistoryQuery).singleton(),
         });
     }
 
@@ -29,6 +29,7 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
 
         this.container.register({
             roundResultPublisher: asClass(RoundResultPublisher).singleton(),
+            runningRoundInfoPublisher: asClass(RunningRoundInfoPublisher).singleton(),
         });
     }
 
