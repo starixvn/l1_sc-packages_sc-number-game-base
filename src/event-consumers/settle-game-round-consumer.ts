@@ -16,7 +16,7 @@ export type FinishDraw = {
 export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGameRoundConsumer {
     async settleRound() {
         let roundSettled: any;
-        const drawResult = this.generateResult();
+        const drawResult = this.gameData.result;
         const drawSettlementResult = this.definition.settle(drawResult);
         const { roundId, drawId, exchangeRates } = this.gameData as GameData;
         Object.assign(drawResult, { drawId: drawId });

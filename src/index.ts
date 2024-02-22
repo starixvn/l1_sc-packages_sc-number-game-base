@@ -5,5 +5,6 @@ import ContainerRegistry from "./container-registry";
 import GameData from "./game-data";
 import GameDefinition from "./game-definition";
 import * as Helpers from "./helpers";
+import * as Models from "./models";
 
-export { Crons, EventConsumers, ContainerRegistry, GameData, GameDefinition, EventPublishers, Helpers };
+export { Crons, EventConsumers, ContainerRegistry, GameData, GameDefinition, EventPublishers, Helpers, Models };

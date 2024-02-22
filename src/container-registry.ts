@@ -1,6 +1,6 @@
 import { asClass } from "awilix";
 import { Table } from "sc-game-base";
-import { InGameConsumer, PlaceBetConsumer, RoundIdConsumer, SettleGameRoundConsumer } from "./event-consumers";
+import { InGameConsumer, PlaceBetConsumer, ProvablyFairConsumer, RoundIdConsumer, SettleGameRoundConsumer } from "./event-consumers";
 import { GameCron, ProcessBetQueue } from "./crons";
 import { RoundResultPublisher, RunningRoundInfoPublisher } from "./event-publishers";
 import { HistoryQuery, RoundQuery } from "./query-apis";
@@ -21,6 +21,7 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
             placeBetConsumer: asClass(PlaceBetConsumer).singleton(),
             settleGameRoundConsumer: asClass(SettleGameRoundConsumer).singleton().proxy(),
             roundIdConsumer: asClass(RoundIdConsumer).singleton(),
+            provablyFairConsumer: asClass(ProvablyFairConsumer).singleton(),
         });
     }
 
