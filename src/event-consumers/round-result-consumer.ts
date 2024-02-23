@@ -5,10 +5,11 @@ import { BaseEventConsumers } from "sc-game-base/src/core";
 import GameData from "../game-data";
 
 export default class RoundResultConsumer extends BaseEventConsumers.RoundResultConsumer {
+    declare gameData: GameData;
     async generateResult() {
-        const { drawId, pf, settlementResultFromAdmin: resultFromAdmin } = this.gameData as GameData;
+        const { drawId, pf, settlementResultFromAdmin: resultFromAdmin } = this.gameData;
 
-        if (drawId === resultFromAdmin.drawId) {
+        if (drawId === resultFromAdmin?.drawId) {
             this.gameData.result = resultFromAdmin.result;
             return;
         }
@@ -60,6 +61,7 @@ export default class RoundResultConsumer extends BaseEventConsumers.RoundResultC
     async createResultRecordPf(serverSeed: string, serverSeedHash: string) {
         await this.resultsRepository.create({
             roundId: this.gameData.roundId,
+            drawId: this.gameData.drawId,
             serverSeedHash: serverSeedHash,
             serverSeed: serverSeed,
             time: new Date(),

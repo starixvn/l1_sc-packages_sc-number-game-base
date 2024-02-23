@@ -17,6 +17,10 @@ type Round = {
 export default class GameCron extends Table.Crons.TableGameCron {
     roundsRepository: mongoose.Model<any>;
     provablyFairConsumer: ProvablyFairConsumer;
+    declare gameData: GameData;
+    declare definition: GameDefinition;
+    declare roundResultConsumer: RoundResultConsumer;
+
     constructor({
         definition,
         gameData,
@@ -88,19 +92,18 @@ export default class GameCron extends Table.Crons.TableGameCron {
     }
 
     generateRoundData(unfinishedRound?: Round) {
-        (this.gameData as GameData).roundResult = unfinishedRound?.result ?? [];
+        this.gameData.roundResult = unfinishedRound?.result ?? [];
         this.calculateOdds(unfinishedRound?.result);
     }
 
     calculateOdds(roundResult: any[] = []) {
-        const probabilities = (this.definition as GameDefinition).getProbabilities(roundResult);
-        (this.gameData as GameData).odds = getBetOdds(probabilities, this.gameData.gameConfigs?.margin);
+        const probabilities = this.definition.getProbabilities(roundResult);
+        this.gameData.odds = getBetOdds(probabilities, this.gameData.gameConfigs?.margin);
     }
 
     async proceed() {
         const durations = this.definition.durations as Duration;
         const { wholeRound } = durations;
-        const remainingTime = this.gameData.remainingTime;
 
         if (this.gameData.remainingTime === wholeRound) {
             await this.checkGameStatus();
@@ -111,6 +114,8 @@ export default class GameCron extends Table.Crons.TableGameCron {
             this.gameData.remainingTime--;
         }
 
+        const remainingTime = this.gameData.remainingTime;
+
         if (this.isChangingRoundTime(remainingTime)) {
             return;
         }
@@ -120,7 +125,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
         }
 
         if (this.isStartingBetTime(remainingTime, durations) && this.resultsRepository) {
-            await (this.roundResultConsumer as RoundResultConsumer).generateServerSeedAndPublishHash();
+            await this.roundResultConsumer.generateServerSeedAndPublishHash();
             this.gameData.settlementResultFromAdmin = {};
         }
 
@@ -133,11 +138,11 @@ export default class GameCron extends Table.Crons.TableGameCron {
             this.runningRoundInfoPublisher.publish();
         }
 
-        if (this.isStartingLockTime(remainingTime)) {
+        if (this.isStartingLockTime(remainingTime + 1)) {
             this.gameStatusPublisher.publishEndPlacingBetStatus();
         }
 
-        if (this.isStartingGenerateResultTime(remainingTime) && this.resultsRepository) {
+        if (this.isStartingGenerateResultWithPfTime(remainingTime) && this.resultsRepository) {
             await this.roundResultConsumer.generateResult();
 
             await this.settleTurn();
@@ -149,15 +154,15 @@ export default class GameCron extends Table.Crons.TableGameCron {
     }
 
     initRemainingTime() {
-        const numberOfTurnsPerRound = (this.definition as GameDefinition).numberOfTurnsPerRound;
-        const turn = (this.gameData as GameData).drawId % numberOfTurnsPerRound || numberOfTurnsPerRound;
+        const numberOfTurnsPerRound = this.definition.numberOfTurnsPerRound;
+        const turn = this.gameData.drawId % numberOfTurnsPerRound || numberOfTurnsPerRound;
         const { wholeRound, wholeTurn, startingRound } = this.definition.durations as Duration;
-        this.gameData.remainingTime = turn === 1 ? wholeRound : wholeRound - startingRound - wholeTurn * (turn - 1) - 1;
+        this.gameData.remainingTime = turn === 1 ? wholeRound : wholeRound - startingRound - wholeTurn * (turn - 1);
     }
 
     async startTurn(remainingTime: number) {
         const turn = this.getCurrentTurn(remainingTime);
-        if (turn === (this.definition as GameDefinition).numberOfTurnsPerRound) {
+        if (turn === this.definition.numberOfTurnsPerRound) {
             this.resetForNewRound();
         } else {
             this.resetForNewTurn();
@@ -176,7 +181,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
     }
 
     resetForNewRound(): void {
-        (this.gameData as GameData).roundResult = [];
+        this.gameData.roundResult = [];
         this.resetForNewTurn();
         this.generateRoundData();
     }
@@ -184,8 +189,8 @@ export default class GameCron extends Table.Crons.TableGameCron {
     resetForNewTurn() {
         super.resetForNewRound();
         this.provablyFairConsumer.reset();
-        (this.gameData as GameData).playerBetCount = {};
-        this.calculateOdds((this.gameData as GameData).roundResult);
+        this.gameData.playerBetCount = {};
+        this.calculateOdds(this.gameData.roundResult);
     }
 
     publishNewTurnData() {
@@ -194,39 +199,41 @@ export default class GameCron extends Table.Crons.TableGameCron {
     }
 
     formatNewTurnData() {
-        const { odds, drawId } = this.gameData as GameData;
+        const { odds, drawId } = this.gameData;
         return { odds, drawId };
     }
 
     isDuringBetTime(remainingTime: number) {
-        const { placingBets, showingResult } = this.definition.durations as Duration;
+        const { placingBets } = this.definition.durations;
         const time = this.getCurrentTimeOfTurn(remainingTime);
-        return time < placingBets + showingResult && time >= 0;
+        return time < placingBets && time >= 0;
     }
 
     isStartingBetTime(remainingTime: number, durations: Duration) {
-        const { placingBets, showingResult } = durations;
+        const { placingBets } = durations;
         const time = this.getCurrentTimeOfTurn(remainingTime);
-        return time === placingBets + showingResult;
+        return time === placingBets;
     }
 
     isStartingTime(remainingTime: number, durations: Duration) {
         return this.isStartingBetTime(remainingTime, durations);
     }
 
-    isStartingGenerateResultTime(remainingTime: number) {
-        return this.isStartingLockTime(remainingTime);
+    isStartingGenerateResultWithPfTime(remainingTime: number) {
+        const time = this.getCurrentTimeOfTurn(remainingTime);
+
+        return time === 0;
     }
 
     isStartingLockTime(remainingTime: number) {
-        const { lockingBet, showingResult } = this.definition.durations as Duration;
+        const { lockingBet } = this.definition.durations;
         const time = this.getCurrentTimeOfTurn(remainingTime);
 
-        return time === lockingBet + showingResult - 1;
+        return time === lockingBet;
     }
 
     isChangingRoundTime(remainingTime: number) {
-        const numberOfTurnsPerRound = (this.definition as GameDefinition).numberOfTurnsPerRound;
+        const numberOfTurnsPerRound = this.definition.numberOfTurnsPerRound;
         const { wholeTurn } = this.definition.durations as Duration;
         return remainingTime >= wholeTurn * numberOfTurnsPerRound;
     }
@@ -244,6 +251,6 @@ export default class GameCron extends Table.Crons.TableGameCron {
     }
 
     calculateCurrentTurn(remainingTime: number, wholeTurn: number) {
-        return Math.ceil(remainingTime / wholeTurn);
+        return Math.floor(remainingTime / wholeTurn) + 1;
     }
 }
