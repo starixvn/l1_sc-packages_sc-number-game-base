@@ -3556,7 +3556,7 @@ chance@1.1.6:
   resolved "http://npm.lumigame.com/chance/-/chance-1.1.6.tgz#967a0a129e0f342f7c65cd5d20f5ae870a26b8af"
   integrity sha512-DXLzaGjasDWbvlFAJyQBIwlzdQZuPdz4of9TTTxmHTjja88ZU/vBwUwxxjalSt43zWTPrhiJT0z0N4bZqfZS9w==
 
-chance@^1.1.7:
+chance@^1.1.11, chance@^1.1.7:
   version "1.1.11"
   resolved "http://npm.lumigame.com/chance/-/chance-1.1.11.tgz#78e10e1f9220a5bbc60a83e3f28a5d8558d84d1b"
   integrity sha512-kqTg3WWywappJPqtgrdvbA380VoXO2eu9VCV895JgbyHsaErXdyHK9LOZ911OvAk6L0obK7kDk9CGs8+oBawVA==
@@ -7406,7 +7406,7 @@ mute-stream@~1.0.0:
   resolved "http://npm.lumigame.com/mute-stream/-/mute-stream-1.0.0.tgz#e31bd9fe62f0aed23520aa4324ea6671531e013e"
   integrity sha512-avsJQhyd+680gKXyG/sQc0nXaC6rBkPOfyHYcFb9+hdkqQkR9bdnkJ0AMZhke0oesPqIO+mFFJ+IdBc7mst4IA==
 
-nanoid@^5.0.6:
+nanoid@^5.0.5, nanoid@^5.0.6:
   version "5.0.6"
   resolved "http://npm.lumigame.com/nanoid/-/nanoid-5.0.6.tgz#7f99a033aa843e4dcf9778bdaec5eb02f4dc44d5"
   integrity sha512-rRq0eMHoGZxlvaFOUdK1Ev83Bd1IgzzR+WJ3IbDJ7QOSdAxYjlurSPqFs9s4lJg29RT6nPwizFtJhQS6V5xgiA==
@@ -8778,27 +8778,33 @@ sc-common@1.8.1:
     mongoose-long "^0.3.0"
     numeral "^2.0.6"
 
-sc-game-base@5.0.1-beta.1:
-  version "5.0.1-beta.1"
-  resolved "http://npm.lumigame.com/sc-game-base/-/sc-game-base-5.0.1-beta.1.tgz#0bb3f16e6f8b203f3e82d495ca701d79fd435474"
-  integrity sha512-5Hgtr906EFRHGCnjgHpa1XRwwZ+1osZ+C7FhvxlGUZpEaONhVWCtI1B5Tws7/5b91OTk2+DiTnnJOXRzEqDiVw==
+sc-game-base@5.0.1-beta.3:
+  version "5.0.1-beta.3"
+  resolved "http://npm.lumigame.com/sc-game-base/-/sc-game-base-5.0.1-beta.3.tgz#f80ecfe18cbcb9a3c42653c0038ff1785b20dba6"
+  integrity sha512-HBK50Ud/L+ZABn44eAjPDMsY/LVCItO2HUUB+SsV9uQuS+jlwg6LwRKMAtFIyIKoRw9VnVPkbANnBC0dbYjMFw==
   dependencies:
     awilix "^8.0.0"
     axios "^1.0.0"
     chance "^1.1.7"
     cors "^2.8.5"
     cron "^2.0.0"
+    crypto "^1.0.1"
+    crypto-random-string "^5.0.0"
     express "^4.17.1"
     helmet "^6.0.0"
     lodash "^4.17.19"
     mongoose "^5.9.25"
     morgan "^1.10.0"
+    nanoid "^5.0.5"
     openid-client "^5.0.0"
+    random-js "^2.1.0"
+    randomstring "^1.3.0"
     sc-base-apis "2.0.0"
     sc-common "1.8.1"
     sc-game-management-client "^0.0.2-beta.22"
     sc-instrument "1.1.1-beta.2"
     sc-instrument-helper "1.0.0"
+    sc-pf-client-seed "^1.0.1-beta.0"
     socket.io "^4.5.4"
     socket.io-msgpack-parser "^3.0.1"
     socket.io-prom-metrics "^1.0.3"
@@ -8839,6 +8845,14 @@ sc-instrument@1.1.1-beta.2:
     "@opentelemetry/semantic-conventions" "1.15.2"
     opentelemetry-instrumentation-socket.io "0.34.0"
     socket.io "4.6.1"
+
+sc-pf-client-seed@^1.0.1-beta.0:
+  version "1.0.1-beta.0"
+  resolved "http://npm.lumigame.com/sc-pf-client-seed/-/sc-pf-client-seed-1.0.1-beta.0.tgz#31fbba5f6f3742cf04e26f73621fb3758f951e88"
+  integrity sha512-LzkOATrCNX6l9KJKRcDRynDdoHP8McppYS7TR10RHn6ewUhM8iwIYxEQwpeYsQQw7l19R1l93uqq1Zez5V/nFg==
+  dependencies:
+    "@types/jest" "^29.5.11"
+    chance "^1.1.11"
 
 sc-semantic-release@^1.3.0:
   version "1.3.0"

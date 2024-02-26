@@ -3,8 +3,9 @@ import Chance from "chance";
 import GameData from "../../../src/game-data";
 import { RoundResultConsumer } from "../../../src/event-consumers";
 import { GameConfigs, ProvablyFair } from "sc-game-base/src/core/game-data";
-import { SeedHelper, ServerSeedHelper } from "../../../src/helpers";
 import { RoundResultPublisher } from "../../../src/event-publishers";
+import { GameDefinition } from "../../../src";
+import { Helpers } from "sc-game-base/src/core";
 
 jest.mock("../../../src/helpers", () => {
     return {
@@ -20,10 +21,10 @@ jest.mock("../../../src/helpers", () => {
 });
 
 describe("roundResultConsumer", () => {
-    const roundResultPublisher = stub(RoundResultPublisher);
+    const roundResultPublisher = stub<RoundResultPublisher>();
     const definition = {
         generateResult: jest.fn(),
-    };
+    } as GameDefinition;
     const chance = new Chance();
     const drawId = chance.natural();
     const roundId = chance.natural();
@@ -157,8 +158,8 @@ describe("roundResultConsumer", () => {
         const mergeSeed = pf.serverSeed + mergeClientSeed;
 
         beforeEach(() => {
-            SeedHelper.getMergeClientSeed = jest.fn().mockReturnValueOnce(mergeClientSeed);
-            SeedHelper.getSHA512Hash = jest.fn().mockReturnValueOnce(sha512Hash);
+            Helpers.SeedHelper.getMergeClientSeed = jest.fn().mockReturnValueOnce(mergeClientSeed);
+            Helpers.SeedHelper.getSHA512Hash = jest.fn().mockReturnValueOnce(sha512Hash);
         });
 
         it("should call getMergeClientSeed", () => {
@@ -166,7 +167,7 @@ describe("roundResultConsumer", () => {
             consumer.generateFinalSeeds(pf);
 
             // Assert
-            expect(SeedHelper.getMergeClientSeed).toHaveBeenCalledWith(pf.clientSeeds);
+            expect(Helpers.SeedHelper.getMergeClientSeed).toHaveBeenCalledWith(pf.clientSeeds);
         });
 
         it("should call getMergeClientSeed", () => {
@@ -174,7 +175,7 @@ describe("roundResultConsumer", () => {
             consumer.generateFinalSeeds(pf);
 
             // Assert
-            expect(SeedHelper.getSHA512Hash).toHaveBeenCalledWith(mergeSeed);
+            expect(Helpers.SeedHelper.getSHA512Hash).toHaveBeenCalledWith(mergeSeed);
         });
 
         it("should return pf data", () => {
@@ -195,9 +196,9 @@ describe("roundResultConsumer", () => {
             gameData.gameConfigs = {
                 randomMode,
             } as GameConfigs;
-            consumer.createResultRecordPf = jest.fn();
-            ServerSeedHelper.generateServerSeed = jest.fn().mockReturnValueOnce(serverSeed);
-            SeedHelper.getSHA256Hash = jest.fn().mockReturnValueOnce(sha256Hash);
+            consumer.createResultRecord = jest.fn();
+            Helpers.ServerSeedHelper.generateServerSeed = jest.fn().mockReturnValueOnce(serverSeed);
+            Helpers.SeedHelper.getSHA256Hash = jest.fn().mockReturnValueOnce(sha256Hash);
         });
 
         it("should call generateServerSeed", () => {
@@ -205,7 +206,7 @@ describe("roundResultConsumer", () => {
             consumer.generateServerSeedAndPublishHash();
 
             // Assert
-            expect(ServerSeedHelper.generateServerSeed).toHaveBeenCalledWith(randomMode);
+            expect(Helpers.ServerSeedHelper.generateServerSeed).toHaveBeenCalledWith(randomMode);
         });
 
         it("should call getSHA256Hash", () => {
@@ -213,7 +214,7 @@ describe("roundResultConsumer", () => {
             consumer.generateServerSeedAndPublishHash();
 
             // Assert
-            expect(SeedHelper.getSHA256Hash).toHaveBeenCalledWith(serverSeed);
+            expect(Helpers.SeedHelper.getSHA256Hash).toHaveBeenCalledWith(serverSeed);
         });
 
         it("should call createResultRecordPf", async () => {
@@ -221,7 +222,7 @@ describe("roundResultConsumer", () => {
             await consumer.generateServerSeedAndPublishHash();
 
             // Assert
-            expect(consumer.createResultRecordPf).toHaveBeenCalledWith(serverSeed, sha256Hash);
+            expect(consumer.createResultRecord).toHaveBeenCalledWith(serverSeed, sha256Hash);
         });
 
         it("should call roundResultPublisher.publishServerSeedHash", async () => {
@@ -241,7 +242,7 @@ describe("roundResultConsumer", () => {
             jest.spyOn(global, "Date").mockImplementation(() => mockDate);
 
             // Act
-            await consumer.createResultRecordPf(serverSeed, serverSeedHash);
+            await consumer.createResultRecord(serverSeed, serverSeedHash);
 
             // Assert
             expect(resultsRepository.create).toHaveBeenCalledWith({ drawId, roundId, serverSeedHash, serverSeed, time: mockDate });

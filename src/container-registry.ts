@@ -1,9 +1,10 @@
 import { asClass } from "awilix";
 import { Table } from "sc-game-base";
-import { InGameConsumer, PlaceBetConsumer, ProvablyFairConsumer, RoundIdConsumer, SettleGameRoundConsumer } from "./event-consumers";
+import { InGameConsumer, PlaceBetConsumer, RoundIdConsumer, SettleGameRoundConsumer } from "./event-consumers";
 import { GameCron, ProcessBetQueue } from "./crons";
 import { RoundResultPublisher, RunningRoundInfoPublisher } from "./event-publishers";
 import { HistoryQuery, RoundQuery } from "./query-apis";
+import { ProvablyFairConsumer } from "sc-game-base/src/core/event-consumers";
 
 export default class ContainerRegistry extends Table.TableContainerRegistry {
     registerApis() {

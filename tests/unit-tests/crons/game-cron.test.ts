@@ -5,7 +5,8 @@ import { Core, Table } from "sc-game-base";
 import GameManagementApiClientFactory from "sc-game-base/src/core/game-management-api";
 import { GameCron } from "../../../src/crons";
 import { getBetOdds } from "../../../src/helpers";
-import { ProvablyFairConsumer, RoundResultConsumer } from "../../../src/event-consumers";
+import { RoundResultConsumer } from "../../../src/event-consumers";
+import { ProvablyFairConsumer, UnsettledRoundConsumer } from "sc-game-base/src/core/event-consumers";
 
 jest.mock("../../../src/helpers", () => ({ getBetOdds: jest.fn() }));
 describe("GameCron tests", () => {
@@ -19,6 +20,7 @@ describe("GameCron tests", () => {
     const gameManagementApiClientFactory = stub<GameManagementApiClientFactory>();
     const roundIdConsumer = stub<Core.BaseEventConsumers.RoundIdConsumer>();
     const provablyFairConsumer = stub<ProvablyFairConsumer>();
+    const unsettledRoundConsumer = stub<UnsettledRoundConsumer>();
 
     const durations = {
         wholeRound: 134,
@@ -45,6 +47,7 @@ describe("GameCron tests", () => {
             roundIdConsumer,
             roundsRepository: { findOne: jest.fn() } as any,
             provablyFairConsumer,
+            unsettledRoundConsumer,
         });
         consumer.startCron = jest.fn();
         roundIdConsumer.initRoundId = jest.fn();
@@ -97,7 +100,7 @@ describe("GameCron tests", () => {
     describe("proceed", () => {
         beforeEach(() => {
             consumer.definition.durations = durations as any;
-            (consumer.definition as GameDefinition).numberOfTurnsPerRound = 4;
+            consumer.definition.numberOfTurnsPerRound = 4;
             consumer.gameData.disabled = false;
         });
 
@@ -424,7 +427,7 @@ describe("GameCron tests", () => {
         describe("isDuringBetTime", () => {
             beforeEach(() => {
                 consumer.startTurn = jest.fn();
-                consumer.roundResultConsumer.generateResultAndPublishHash = jest.fn();
+                consumer.roundResultConsumer.generateServerSeedAndPublishHash = jest.fn();
                 consumer.gameStatusPublisher.publishStartPlacingBetStatus = jest.fn();
                 consumer.gameStatusPublisher.publishEndPlacingBetStatus = jest.fn();
                 consumer.runningRoundInfoPublisher.publish = jest.fn();

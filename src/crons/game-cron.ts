@@ -4,8 +4,9 @@ import GameManagementApiClientFactory from "sc-game-base/src/core/game-managemen
 import { logger } from "sc-common";
 import GameDefinition, { Duration } from "../game-definition";
 import GameData from "../game-data";
-import { RoundResultConsumer, ProvablyFairConsumer } from "../event-consumers";
+import { RoundResultConsumer } from "../event-consumers";
 import { getBetOdds } from "../helpers";
+import { ProvablyFairConsumer, UnsettledRoundConsumer } from "sc-game-base/src/core/event-consumers";
 
 type Round = {
     id: number;
@@ -16,7 +17,6 @@ type Round = {
 
 export default class GameCron extends Table.Crons.TableGameCron {
     roundsRepository: mongoose.Model<any>;
-    provablyFairConsumer: ProvablyFairConsumer;
     declare gameData: GameData;
     declare definition: GameDefinition;
     declare roundResultConsumer: RoundResultConsumer;
@@ -36,6 +36,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
         roundIdConsumer,
         roundsRepository,
         provablyFairConsumer,
+        unsettledRoundConsumer,
     }: {
         definition: GameDefinition;
         gameData: GameData;
@@ -51,6 +52,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
         roundIdConsumer: Core.BaseEventConsumers.RoundIdConsumer;
         roundsRepository: mongoose.Model<any>;
         provablyFairConsumer: ProvablyFairConsumer;
+        unsettledRoundConsumer: UnsettledRoundConsumer;
     }) {
         super({
             definition,
@@ -65,9 +67,10 @@ export default class GameCron extends Table.Crons.TableGameCron {
             appConfigs,
             gameManagementApiClientFactory,
             roundIdConsumer,
+            provablyFairConsumer,
+            unsettledRoundConsumer,
         });
         this.roundsRepository = roundsRepository;
-        this.provablyFairConsumer = provablyFairConsumer;
     }
 
     async start() {
@@ -76,6 +79,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
         await this.getSettingForNewRound();
         await this.updateExchangeRates();
         await this.initLastRound();
+        await this.unsettledRoundConsumer.proceed();
         this.startCron();
     }
 
