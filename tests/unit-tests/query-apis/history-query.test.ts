@@ -119,6 +119,11 @@ describe("RoundQuery tests", () => {
                     betLogs: [
                         {
                             drawId: 1,
+                            _id: 1,
+                            uid: 1,
+                            siteId: 1,
+                            playerId: 1,
+                            paid: true,
                             result: {
                                 drawId: 1,
                                 player: 34,
@@ -143,6 +148,11 @@ describe("RoundQuery tests", () => {
                         },
                         {
                             drawId: 2,
+                            _id: 2,
+                            uid: 2,
+                            siteId: 1,
+                            playerId: 1,
+                            paid: true,
                             result: {
                                 drawId: 2,
                                 player: 33,
@@ -167,6 +177,11 @@ describe("RoundQuery tests", () => {
                         },
                         {
                             drawId: 3,
+                            _id: 3,
+                            uid: 3,
+                            siteId: 1,
+                            playerId: 1,
+                            paid: true,
                             result: {
                                 drawId: 3,
                                 player: 39,
