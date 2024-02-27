@@ -1,8 +1,8 @@
-export const generateRemainingBalls = (totalBalls: number, drawBalls: number[]) => {
+export const generateRemainingBalls = (totalBalls: number, drawnBalls: number[]) => {
     const result = [...Array(totalBalls + 1).keys()].slice(1);
 
-    if (drawBalls.length) {
-        return result.filter((n) => !drawBalls.includes(n));
+    if (drawnBalls.length) {
+        return result.filter((n) => !drawnBalls.includes(n));
     }
 
     return result;

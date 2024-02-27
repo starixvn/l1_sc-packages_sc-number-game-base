@@ -1,6 +1,7 @@
 import { ProvablyFair } from "sc-game-base/src/core/game-data";
 import { BaseEventConsumers } from "sc-game-base/src/core";
 import GameData from "../game-data";
+import { SeedHelper, ServerSeedHelper } from "sc-game-base/src/core/helpers";
 
 export default class RoundResultConsumer extends BaseEventConsumers.RoundResultConsumer {
     declare gameData: GameData;
@@ -13,16 +14,12 @@ export default class RoundResultConsumer extends BaseEventConsumers.RoundResultC
         }
 
         const finalSeeds = await this.getFinalSeeds(drawId, pf);
-        const { randomMode } = this.gameData.gameConfigs;
 
-        this.gameData.result = this.definition.generateResult(randomMode, finalSeeds);
+        this.gameData.result = this.definition.generateResult(finalSeeds);
     }
 
     async getFinalSeeds(drawId: number, pf: ProvablyFair): Promise<ProvablyFair> {
-        if (!this.resultsRepository) return {} as ProvablyFair;
-
-        const { serverSeed, serverSeedHash } = pf;
-        let finalSeeds = this.generateFinalSeeds(pf);
+        const finalSeeds = this.generateFinalSeeds(pf);
 
         await this.resultsRepository.findOneAndUpdate(
             { drawId },
@@ -31,9 +28,19 @@ export default class RoundResultConsumer extends BaseEventConsumers.RoundResultC
             }
         );
 
-        this.gameData.pf = { ...finalSeeds, serverSeed, serverSeedHash };
+        this.gameData.pf = { ...finalSeeds };
 
         return finalSeeds;
+    }
+
+    generateFinalSeeds(pf: ProvablyFair) {
+        const { clientSeeds } = pf;
+
+        const mergeClientSeed = clientSeeds
+            .reduce((sumClientSeeds, clientSeed) => sumClientSeeds + Number(Object.values(clientSeed)[0]), 0)
+            .toString();
+
+        return { ...pf, mergeClientSeed };
     }
 
     async createResultRecord(serverSeed: string, serverSeedHash: string) {
@@ -44,5 +51,22 @@ export default class RoundResultConsumer extends BaseEventConsumers.RoundResultC
             serverSeed: serverSeed,
             time: new Date(),
         });
+    }
+
+    async generateServerSeedAndPublishHash() {
+        const serverSeed = this.generateSeverSeed();
+        const serverSeedHash = SeedHelper.getSHA256Hash(serverSeed);
+
+        this.gameData.pf = { ...this.gameData.pf, serverSeed, serverSeedHash };
+
+        await this.createResultRecord(serverSeed, serverSeedHash);
+
+        this.roundResultPublisher.publishServerSeedHash();
+    }
+
+    generateSeverSeed() {
+        const { randomMode } = this.gameData.gameConfigs;
+
+        return ServerSeedHelper.generateServerSeed(randomMode);
     }
 }
