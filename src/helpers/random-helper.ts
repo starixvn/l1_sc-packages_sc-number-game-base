@@ -26,7 +26,13 @@ export const randomModes: any = {
     3: [random1, random2, random5, random6],
 };
 
-export const getRandomBallFromArrayOfBalls = (randomMode: number, balls: number[] = []): number => {
+export const getRandomNumberFromArray = (randomMode: number, arr: number[]): number => {
     const randomShuffles: Function[] = randomModes[randomMode] || randomModes[1];
-    return chance.pickone(randomShuffles)(balls);
+    return chance.pickone(randomShuffles)(arr);
+};
+
+export const getRandomIndex = (randomMode: number, length: number): number => {
+    const indexes = [...Array(length + 1).keys()].slice(1);
+
+    return getRandomNumberFromArray(randomMode, indexes);
 };

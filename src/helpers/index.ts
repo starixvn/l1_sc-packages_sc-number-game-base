@@ -1,6 +1,7 @@
 import BetCountHelper from "./bet-percentage-helper";
 import { getBetOdds } from "./calculate-odds";
 import { getFilterObjectWithAllowedKeys } from "./object-filtered";
-import { getRandomBallFromArrayOfBalls } from "./random-helper";
+import { getRandomNumberFromArray, getRandomIndex } from "./random-helper";
+import { generateRemainingBalls } from "./draw-ball-helper";
 
-export { BetCountHelper, getBetOdds, getFilterObjectWithAllowedKeys, getRandomBallFromArrayOfBalls };
+export { BetCountHelper, getBetOdds, getFilterObjectWithAllowedKeys, getRandomNumberFromArray, generateRemainingBalls, getRandomIndex };

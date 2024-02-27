@@ -15,7 +15,7 @@ export default class RoundResultConsumer extends BaseEventConsumers.RoundResultC
         const finalSeeds = await this.getFinalSeeds(drawId, pf);
         const { randomMode } = this.gameData.gameConfigs;
 
-        this.gameData.result = this.definition.generateResult(randomMode, finalSeeds.finalHash);
+        this.gameData.result = this.definition.generateResult(randomMode, finalSeeds);
     }
 
     async getFinalSeeds(drawId: number, pf: ProvablyFair): Promise<ProvablyFair> {

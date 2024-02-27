@@ -1,3 +1,3 @@
-import ResultSchema from "./result-schema";
+import Results from "./result-schema";
 
-export { ResultSchema };
+export { Results };

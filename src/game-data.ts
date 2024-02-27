@@ -4,4 +4,5 @@ export default class GameData extends TableGameData {
     odds: Record<string, number> = {};
     drawId = 0;
     roundResult: any;
+    gameState: any;
 }
