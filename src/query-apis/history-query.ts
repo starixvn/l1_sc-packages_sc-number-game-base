@@ -32,6 +32,7 @@ export default class HistoryQuery extends Core.QueryApis.HistoryQuery {
                     const betLogDetails = await this.getBetLogDetailsEachDraw(player, currentDrawBet.drawId);
                     const drawResults = await this.getDrawResults(currentDrawBet.roundId, currentDrawBet.drawId);
                     return {
+                        ...this.convertBet(currentDrawBet),
                         roundId: currentDrawBet.roundId,
                         drawId: currentDrawBet.drawId,
                         result: drawResults.result,
