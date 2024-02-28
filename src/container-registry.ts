@@ -1,4 +1,4 @@
-import { asClass, asValue } from "awilix";
+import { asClass } from "awilix";
 import { Table } from "sc-game-base";
 import {
     InGameConsumer,
@@ -11,17 +11,8 @@ import {
 import { GameCron, ProcessBetQueue } from "./crons";
 import { RoundResultPublisher, RunningRoundInfoPublisher } from "./event-publishers";
 import { HistoryQuery, RoundQuery } from "./query-apis";
-import { Results } from "./models";
 
 export default class ContainerRegistry extends Table.TableContainerRegistry {
-    registerModels() {
-        super.registerModels();
-
-        this.container.register({
-            resultsRepository: asValue(Results),
-        });
-    }
-
     registerApis() {
         super.registerApis();
         this.container.register({
