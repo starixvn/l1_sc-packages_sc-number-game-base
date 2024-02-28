@@ -88,6 +88,10 @@ export default class GameCron extends Table.Crons.TableGameCron {
         this.generateRoundData(unfinishedRound);
     }
 
+    async queryLastResult() {
+        this.gameData.lastResultRecord = await this.resultsRepository.findOne({ drawId: this.gameData.drawId }).lean().exec();
+    }
+
     async getUnfinishedRound() {
         return this.roundsRepository
             .findOne({ ended: false }, "id drawId result settlementResult", { sort: { id: -1 } })
@@ -128,13 +132,11 @@ export default class GameCron extends Table.Crons.TableGameCron {
             await this.startTurn(remainingTime);
         }
 
-        if (this.isStartingBetTime(remainingTime, durations) && this.resultsRepository) {
-            await this.roundResultConsumer.generateServerSeedAndPublishHash();
-            this.gameData.settlementResultFromAdmin = {};
-        }
-
         if (this.isStartingBetTime(remainingTime, durations)) {
             this.gameStatusPublisher.publishStartPlacingBetStatus();
+
+            await this.roundResultConsumer.generateServerSeedAndPublishHash();
+            this.gameData.settlementResultFromAdmin = {};
         }
 
         if (this.isDuringBetTime(remainingTime)) {
@@ -146,8 +148,8 @@ export default class GameCron extends Table.Crons.TableGameCron {
             this.gameStatusPublisher.publishEndPlacingBetStatus();
         }
 
-        if (this.isStartingGenerateResultWithPfTime(remainingTime) && this.resultsRepository) {
-            this.provablyFairConsumer.updateClientSeedFromBets();
+        if (this.isStartingGenerateResultWithPfTime(remainingTime)) {
+            await this.provablyFairConsumer.updateClientSeedFromBets();
 
             await this.roundResultConsumer.generateResult();
 

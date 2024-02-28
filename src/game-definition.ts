@@ -18,6 +18,7 @@ export default class GameDefinition extends BaseGameDefinition {
             numberOfTurnsPerRound = 1,
             numberOfRoundHistory = 100,
             historyPageSize = 8,
+            provablyFair = true,
         }: GameSettings,
         generateResult: Function,
         settle: Function,
@@ -25,7 +26,7 @@ export default class GameDefinition extends BaseGameDefinition {
         getProbabilities: Function
     ) {
         super(
-            { id, name, durations, choices, choicesMapper, hedgeBetGroups, numberOfRoundHistory, historyPageSize },
+            { id, name, durations, choices, choicesMapper, hedgeBetGroups, numberOfRoundHistory, historyPageSize, provablyFair },
             generateResult,
             settle,
             generateRawResultForHash
@@ -55,4 +56,5 @@ export type GameSettings = {
     numberOfTurnsPerRound: number;
     numberOfRoundHistory?: number;
     historyPageSize?: number;
+    provablyFair?: boolean;
 };
