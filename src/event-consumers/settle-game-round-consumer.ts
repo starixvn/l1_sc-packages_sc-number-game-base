@@ -14,11 +14,15 @@ export type FinishDraw = {
 };
 
 export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGameRoundConsumer {
+    declare gameData: GameData;
+    declare definition: GameDefinition;
+    declare roundResultPublisher: RoundResultPublisher;
+
     async settleRound() {
         let roundSettled: any;
         const drawResult = this.gameData.result;
         const drawSettlementResult = this.definition.settle(drawResult);
-        const { roundId, drawId, exchangeRates } = this.gameData as GameData;
+        const { roundId, drawId, exchangeRates } = this.gameData;
         Object.assign(drawResult, { drawId: drawId });
         Object.assign(drawSettlementResult, { drawId: drawId });
 
@@ -59,12 +63,12 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
 
             this.updateRoundData(finishDraw, roundSettled.result);
 
-            (this.roundResultPublisher as RoundResultPublisher).publishWinners(roundId, this.gameData.winningPlayers, drawId);
+            this.roundResultPublisher.publishWinners(roundId, this.gameData.winningPlayers, drawId);
         }
     }
 
     isFirstDrawOfRound(drawId: number): boolean {
-        return drawId % (this.definition as GameDefinition).numberOfTurnsPerRound === 1;
+        return drawId % this.definition.numberOfTurnsPerRound === 1;
     }
 
     async queryBets(drawId: number) {
@@ -78,7 +82,7 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
         const bets = await this.queryBets(finishDraw.drawId);
 
         if (bets?.length) {
-            const odds = (this.gameData as GameData).odds;
+            const odds = this.gameData.odds;
 
             await Promise.all(
                 bets.map(async (bet: any) => {
@@ -101,15 +105,16 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
     }
 
     isLastDrawOfRound(drawId: number): boolean {
-        return drawId % (this.definition as GameDefinition).numberOfTurnsPerRound === 0;
+        return drawId % this.definition.numberOfTurnsPerRound === 0;
     }
 
     updateRoundData(finishDraw: FinishDraw, roundResult: any) {
-        (this.gameData as GameData).drawId = finishDraw.drawId + 1;
+        this.gameData.drawId = finishDraw.drawId + 1;
 
         if (this.isLastDrawOfRound(finishDraw.drawId)) {
             this.gameData.roundId = finishDraw.roundId + 1;
         }
-        (this.gameData as GameData).roundResult = roundResult;
+
+        this.gameData.roundResult = roundResult;
     }
 }
