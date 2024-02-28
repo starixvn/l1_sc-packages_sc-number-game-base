@@ -37,7 +37,7 @@ export default class RoundResultConsumer extends BaseEventConsumers.RoundResultC
         const { clientSeeds } = pf;
 
         const mergeClientSeed = clientSeeds
-            .reduce((sumClientSeeds, clientSeed) => sumClientSeeds + Number(Object.values(clientSeed)[0]), 0)
+            .reduce((sumClientSeeds, clientSeed) => sumClientSeeds + Number(clientSeed.clientSeed), 0)
             .toString();
 
         return { ...pf, mergeClientSeed };

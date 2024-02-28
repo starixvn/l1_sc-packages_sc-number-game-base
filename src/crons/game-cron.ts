@@ -147,6 +147,8 @@ export default class GameCron extends Table.Crons.TableGameCron {
         }
 
         if (this.isStartingGenerateResultWithPfTime(remainingTime) && this.resultsRepository) {
+            this.provablyFairConsumer.updateClientSeedFromBets();
+
             await this.roundResultConsumer.generateResult();
 
             await this.settleTurn();
