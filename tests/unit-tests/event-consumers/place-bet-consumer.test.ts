@@ -249,7 +249,8 @@ describe("PlaceBetConsumer test", () => {
         it("should call validate bet", () => {
             // arrange
             consumer.validateBetRequest = jest.fn().mockReturnValueOnce(false);
-            const payload = { betChoices: { player: 10, tie: 20 } };
+            consumer.validateRequestParams = jest.fn().mockReturnValueOnce(true);
+            const payload = { betChoices: { player: 10, tie: 20 }, clientSeed: "0" };
             (consumer.gameData as GameData).drawId = 1;
 
             // act
@@ -258,6 +259,19 @@ describe("PlaceBetConsumer test", () => {
 
             // assert
             expect(consumer.validateBetRequest).toHaveBeenCalledWith({}, payload.betChoices, 30, false, 1);
+        });
+        it("should call validate bet", () => {
+            // arrange
+            consumer.validateRequestParams = jest.fn().mockReturnValueOnce(false);
+            const payload = { betChoices: { player: 10, tie: 20 }, clientSeed: "0" };
+            (consumer.gameData as GameData).drawId = 1;
+
+            // act
+            // @ts-ignore
+            consumer.consume({}, payload);
+
+            // assert
+            expect(consumer.validateRequestParams).toHaveBeenCalledWith(payload, {});
         });
     });
     describe("anyChoiceExceedItsMaxBet", () => {

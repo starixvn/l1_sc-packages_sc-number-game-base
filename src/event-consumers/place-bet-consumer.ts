@@ -7,12 +7,24 @@ import GameData from "../game-data";
 type BetPayload = {
     amount: number;
     betChoices: Record<string, number>;
-    freeBet?: boolean;
     drawId: number;
+    clientSeed: string;
+    freeBet?: boolean;
     m?: string;
 };
 
 export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsumer {
+    validateBetRequestParams(request: BetPayload) {
+        const { betChoices } = request;
+
+        return [
+            {
+                failure: !betChoices || Object.keys(betChoices).length === 0,
+                notice: this.getNoticeObj(helpers.noticeHelper.invalidBet),
+            },
+        ];
+    }
+
     composeBettingTimeValidationCriteria(_: number) {
         const configs = this.gameData.gameConfigs;
         const numberOfTurnsPerRound = (this.definition as GameDefinition).numberOfTurnsPerRound;
@@ -121,7 +133,7 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
 
         const { amount, betChoices, freeBet, drawId } = payload;
 
-        if (!this.validateBetRequest(player, betChoices, amount, freeBet, drawId)) {
+        if (!this.validateRequestParams(payload, player) || !this.validateBetRequest(player, betChoices, amount, freeBet, drawId)) {
             return;
         }
 

@@ -6,8 +6,9 @@ import GameDefinition, { Duration } from "../game-definition";
 type BetPayload = {
     amount: number;
     betChoices: Record<string, number>;
-    freeBet?: boolean;
     drawId: number;
+    clientSeed: string;
+    freeBet?: boolean;
     mode?: string;
 };
 
@@ -89,6 +90,7 @@ export default class ProcessBetQueue extends TableProcessBetQueue {
             freeBet: bet.freeBet,
             drawId,
             roundId: roundId,
+            clientSeed: bet.clientSeed,
         };
         const existingBetFilter = { uid: player.UID, roundId, drawId, freeBet: bet.freeBet };
         const existingBetIncrement = {

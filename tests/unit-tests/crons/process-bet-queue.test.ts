@@ -191,7 +191,7 @@ describe("ProcessBetQueue tests", () => {
             };
             const rate = 1;
             const drawId = 1;
-            const bet = { betChoices: { choice1: 10, choice2: 20 }, freeBet: false, amount: 30 };
+            const bet = { betChoices: { choice1: 10, choice2: 20 }, freeBet: false, amount: 30, clientSeed: "0" };
             consumer.betsRepository = { updateOne: jest.fn() };
             consumer.gameData.roundId = 1;
             const odds = { choice1: 2, choice2: 10 };
@@ -215,6 +215,7 @@ describe("ProcessBetQueue tests", () => {
                 rate,
                 operatorId: player.session.operatorId,
                 playerId: player.session.playerId,
+                clientSeed: "0",
             };
 
             // act
