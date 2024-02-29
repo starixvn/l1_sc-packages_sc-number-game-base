@@ -107,7 +107,7 @@ describe("GameCron tests", () => {
         afterEach(() => {
             jest.clearAllMocks();
         });
-        describe("when remaining = wholeRound", () => {
+        describe("when remaining === wholeRound", () => {
             it("should call checkGameStatus when remainingTime === wholeRound", async () => {
                 // arrange
                 consumer.checkGameStatus = jest.fn();
@@ -148,6 +148,20 @@ describe("GameCron tests", () => {
             });
         });
 
+        describe("when remaining !== wholeRound", () => {
+            it("should NOT call checkGameStatus when remainingTime === wholeRound", async () => {
+                // arrange
+                consumer.checkGameStatus = jest.fn();
+                consumer.gameData.remainingTime = durations.wholeRound - 1;
+
+                // act
+                await consumer.proceed();
+
+                // assert
+                expect(consumer.checkGameStatus).not.toHaveBeenCalled();
+            });
+        });
+
         describe("when changing round time", () => {
             it.each([133, 134])("should not do anything", async (remainingTime) => {
                 // arrange
@@ -171,10 +185,10 @@ describe("GameCron tests", () => {
                 consumer.bot.reset = jest.fn();
                 consumer.runningRoundInfoPublisher.publishToAllUsers = jest.fn();
                 consumer.gameStatusPublisher.publishStartPlacingBetStatus = jest.fn();
-                (consumer.definition as GameDefinition).getProbabilities = jest.fn();
+                consumer.definition.getProbabilities = jest.fn();
                 Table.Crons.TableGameCron.prototype.resetForNewRound = jest.fn();
                 (getBetOdds as jest.Mock).mockReturnValue({ choice1: 1 });
-                (consumer.roundResultConsumer as RoundResultConsumer).generateServerSeedAndPublishHash = jest.fn();
+                consumer.roundResultConsumer.generateServerSeedAndPublishHash = jest.fn();
             });
 
             afterEach(() => {
@@ -366,40 +380,35 @@ describe("GameCron tests", () => {
                 consumer.gameStatusPublisher.publishStartPlacingBetStatus = jest.fn();
             });
 
-            const testCases = [{ remainingTime: 1 }, { remainingTime: 34 }, { remainingTime: 67 }, { remainingTime: 100 }];
+            const testCases = [{ remainingTime: 0 }, { remainingTime: 33 }, { remainingTime: 66 }, { remainingTime: 99 }];
 
-            describe("when having resultsRepository value", () => {
-                it.each(testCases)("should call roundResultConsumer.generateResult", async ({ remainingTime }) => {
-                    // arrange
-                    consumer.gameData.remainingTime = remainingTime;
+            it.each(testCases)("should call roundResultConsumer.generateResult", async ({ remainingTime }) => {
+                // arrange
+                consumer.gameData.remainingTime = remainingTime;
 
-                    // act
-                    await consumer.proceed();
+                // act
+                await consumer.proceed();
 
-                    // Assert
-                    expect(consumer.roundResultConsumer.generateResult).toHaveBeenCalled();
-                });
+                // Assert
+                expect(consumer.roundResultConsumer.generateResult).toHaveBeenCalled();
             });
 
-            describe("when NOT having resultsRepository value", () => {
-                it("should NOT call roundResultConsumer.generateResult", async () => {
-                    // arrange
-                    consumer.gameData.remainingTime = 107;
-                    consumer.resultsRepository = null;
+            it.each(testCases)("should call provablyFairConsumer.updateClientSeedFromBets", async ({ remainingTime }) => {
+                // arrange
+                consumer.gameData.remainingTime = remainingTime;
 
-                    // act
-                    await consumer.proceed();
+                // act
+                await consumer.proceed();
 
-                    // Assert
-                    expect(consumer.roundResultConsumer.generateResult).not.toHaveBeenCalled();
-                });
+                // Assert
+                expect(consumer.provablyFairConsumer.updateClientSeedFromBets).toHaveBeenCalled();
             });
 
             describe("when having gameData.result value", () => {
-                it("should call settleGameRoundConsumer.settleRound", async () => {
+                it.each(testCases)("should call settleGameRoundConsumer.settleRound", async ({ remainingTime }) => {
                     // arrange
                     consumer.gameData.result = {};
-                    consumer.gameData.remainingTime = 1;
+                    consumer.gameData.remainingTime = remainingTime;
 
                     // act
                     await consumer.proceed();
@@ -410,10 +419,10 @@ describe("GameCron tests", () => {
             });
 
             describe("when NOT having gameData.result value", () => {
-                it("should NOT call settleGameRoundConsumer.settleRound", async () => {
+                it.each(testCases)("should NOT call settleGameRoundConsumer.settleRound", async ({ remainingTime }) => {
                     // arrange
                     consumer.gameData.result = null;
-                    consumer.gameData.remainingTime = 107;
+                    consumer.gameData.remainingTime = remainingTime;
 
                     // act
                     await consumer.proceed();
@@ -489,7 +498,7 @@ describe("GameCron tests", () => {
             });
         });
 
-        describe("when remainingTime < 0", () => {
+        describe("when remainingTime === 0", () => {
             it("should reset time ", async () => {
                 // arrange
                 consumer.gameData.remainingTime = 0;

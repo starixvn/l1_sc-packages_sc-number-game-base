@@ -118,11 +118,11 @@ export default class GameCron extends Table.Crons.TableGameCron {
             !this.gameData.disabled && this.initRemainingTime();
         }
 
+        const remainingTime = this.gameData.remainingTime;
+
         if (!this.gameData.disabled) {
             this.gameData.remainingTime--;
         }
-
-        const remainingTime = this.gameData.remainingTime;
 
         if (this.isChangingRoundTime(remainingTime)) {
             return;
@@ -144,7 +144,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
             this.runningRoundInfoPublisher.publish();
         }
 
-        if (this.isStartingLockTime(remainingTime + 1)) {
+        if (this.isStartingLockTime(remainingTime)) {
             this.gameStatusPublisher.publishEndPlacingBetStatus();
         }
 
@@ -156,7 +156,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
             await this.settleTurn();
         }
 
-        if (remainingTime < 0) {
+        if (remainingTime === 0) {
             this.gameData.remainingTime = wholeRound;
         }
     }
@@ -214,13 +214,13 @@ export default class GameCron extends Table.Crons.TableGameCron {
     isDuringBetTime(remainingTime: number) {
         const { placingBets } = this.definition.durations;
         const time = this.getCurrentTimeOfTurn(remainingTime);
-        return time < placingBets && time >= 0;
+        return time <= placingBets && time > 0;
     }
 
     isStartingBetTime(remainingTime: number, durations: Duration) {
         const { placingBets } = durations;
         const time = this.getCurrentTimeOfTurn(remainingTime);
-        return time === placingBets;
+        return time === placingBets + 1;
     }
 
     isStartingTime(remainingTime: number, durations: Duration) {
@@ -243,7 +243,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
     isChangingRoundTime(remainingTime: number) {
         const numberOfTurnsPerRound = this.definition.numberOfTurnsPerRound;
         const { wholeTurn } = this.definition.durations as Duration;
-        return remainingTime >= wholeTurn * numberOfTurnsPerRound;
+        return remainingTime > wholeTurn * numberOfTurnsPerRound;
     }
 
     getCurrentTimeOfTurn(remainingTime: number) {
