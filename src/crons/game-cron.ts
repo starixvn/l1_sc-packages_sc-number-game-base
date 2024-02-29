@@ -259,6 +259,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
     }
 
     calculateCurrentTurn(remainingTime: number, wholeTurn: number) {
-        return Math.floor(remainingTime / wholeTurn) + 1;
+        const numberOfTurnsPerRound = this.definition.numberOfTurnsPerRound;
+        return Math.min(Math.floor(remainingTime / wholeTurn) + 1, numberOfTurnsPerRound);
     }
 }
