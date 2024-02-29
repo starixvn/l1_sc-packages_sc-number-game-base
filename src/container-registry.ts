@@ -5,6 +5,7 @@ import {
     PlaceBetConsumer,
     ProvablyFairConsumer,
     RoundIdConsumer,
+    RoundResultConsumer,
     SettleGameRoundConsumer,
     UnsettledRoundConsumer,
 } from "./event-consumers";
@@ -29,7 +30,8 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
             settleGameRoundConsumer: asClass(SettleGameRoundConsumer).singleton().proxy(),
             roundIdConsumer: asClass(RoundIdConsumer).singleton(),
             provablyFairConsumer: asClass(ProvablyFairConsumer).singleton(),
-            unsettledRoundConsumer: asClass(UnsettledRoundConsumer).singleton(),
+            unsettledRoundConsumer: asClass(UnsettledRoundConsumer).singleton().proxy(),
+            roundResultConsumer: asClass(RoundResultConsumer).singleton(),
         });
     }
 
