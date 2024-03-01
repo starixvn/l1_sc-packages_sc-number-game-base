@@ -9,7 +9,7 @@ import {
     SettleGameRoundConsumer,
     UnsettledRoundConsumer,
 } from "./event-consumers";
-import { GameCron, ProcessBetQueue } from "./crons";
+import { Bot, GameCron, ProcessBetQueue } from "./crons";
 import { RoundResultPublisher, RunningRoundInfoPublisher } from "./event-publishers";
 import { HistoryQuery, RoundQuery } from "./query-apis";
 
@@ -47,6 +47,7 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
     registerCrons() {
         super.registerCrons();
         this.container.register({
+            bot: asClass(Bot).singleton(),
             gameCron: asClass(GameCron).singleton().proxy(),
             processBetQueue: asClass(ProcessBetQueue).singleton().proxy(),
         });
