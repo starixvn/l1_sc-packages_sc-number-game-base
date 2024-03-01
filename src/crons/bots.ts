@@ -13,21 +13,14 @@ export default class Bot extends Table.Crons.TableGameBot {
     betChoiceRatio: Record<string, number>;
     hedgeBetGroups: any[];
 
-    constructor({
-        definition,
-        gameData,
-        publisher,
-        gameManagementApiClientFactory,
-        tempBetsRepository,
-        provablyFairConsumer,
-    }: {
-        definition: GameDefinition;
-        gameData: GameData;
-        publisher: Core.BaseEventPublishers.BaseEventPublisher;
-        gameManagementApiClientFactory: GameManagementApiClientFactory;
-        provablyFairConsumer: ProvablyFairConsumer;
-        tempBetsRepository: mongoose.Model<any>;
-    }) {
+    constructor(
+        definition: GameDefinition,
+        gameData: GameData,
+        publisher: Core.BaseEventPublishers.BaseEventPublisher,
+        gameManagementApiClientFactory: GameManagementApiClientFactory,
+        provablyFairConsumer: ProvablyFairConsumer,
+        tempBetsRepository: mongoose.Model<any>
+    ) {
         super(definition, gameData, publisher, gameManagementApiClientFactory, tempBetsRepository, provablyFairConsumer);
         this.betOptions = definition.choices;
         this.smallTicketRatio = 70;
