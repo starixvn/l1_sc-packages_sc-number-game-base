@@ -165,7 +165,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
         const numberOfTurnsPerRound = this.definition.numberOfTurnsPerRound;
         const turn = this.gameData.drawId % numberOfTurnsPerRound || numberOfTurnsPerRound;
         const { wholeRound, wholeTurn, startingRound } = this.definition.durations as Duration;
-        this.gameData.remainingTime = turn === 1 ? wholeRound : wholeRound - startingRound - wholeTurn * (turn - 1) - 1;
+        this.gameData.remainingTime = turn === 1 ? this.gameData.remainingTime : wholeRound - startingRound - wholeTurn * (turn - 1) - 1;
     }
 
     async startTurn(remainingTime: number) {
