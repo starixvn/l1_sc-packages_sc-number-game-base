@@ -2,6 +2,8 @@ import { Core, Table } from "sc-game-base";
 import GameDefinition from "../game-definition";
 import GameData from "../game-data";
 import mongoose from "mongoose";
+import GameManagementApiClientFactory from "sc-game-base/src/core/game-management-api";
+import { ProvablyFairConsumer } from "../event-consumers";
 
 export default class Bot extends Table.Crons.TableGameBot {
     betOptions: any;
@@ -15,16 +17,18 @@ export default class Bot extends Table.Crons.TableGameBot {
         definition,
         gameData,
         publisher,
-        userInfosRepository,
+        gameManagementApiClientFactory,
         tempBetsRepository,
+        provablyFairConsumer,
     }: {
         definition: GameDefinition;
         gameData: GameData;
         publisher: Core.BaseEventPublishers.BaseEventPublisher;
-        userInfosRepository: mongoose.Model<any>;
+        gameManagementApiClientFactory: GameManagementApiClientFactory;
+        provablyFairConsumer: ProvablyFairConsumer;
         tempBetsRepository: mongoose.Model<any>;
     }) {
-        super(definition, gameData, publisher, userInfosRepository, tempBetsRepository);
+        super(definition, gameData, publisher, gameManagementApiClientFactory, tempBetsRepository, provablyFairConsumer);
         this.betOptions = definition.choices;
         this.smallTicketRatio = 70;
         this.smallTickets = 0;
