@@ -32,11 +32,11 @@ describe("roundResultConsumer", () => {
         serverSeed: chance.guid(),
         serverSeedHash: chance.guid(),
         clientSeeds: [
-            { player1: chance.integer({ min: 0, max: 9999 }).toString() },
-            { player2: chance.integer({ min: 0, max: 9999 }).toString() },
-            { player3: chance.integer({ min: 0, max: 9999 }).toString() },
-            { player4: chance.integer({ min: 0, max: 9999 }).toString() },
-            { player5: chance.integer({ min: 0, max: 9999 }).toString() },
+            { name: "player1", clientSeed: chance.integer({ min: 0, max: 9999 }).toString() },
+            { name: "player2", clientSeed: chance.integer({ min: 0, max: 9999 }).toString() },
+            { name: "player3", clientSeed: chance.integer({ min: 0, max: 9999 }).toString() },
+            { name: "player4", clientSeed: chance.integer({ min: 0, max: 9999 }).toString() },
+            { name: "player5", clientSeed: chance.integer({ min: 0, max: 9999 }).toString() },
         ],
         finalHash: chance.guid(),
         mergeClientSeed: "",
@@ -105,7 +105,7 @@ describe("roundResultConsumer", () => {
                 await consumer.generateResult();
 
                 // Assert
-                expect(definition.generateResult).toHaveBeenCalledWith(pf.finalHash);
+                expect(definition.generateResult).toHaveBeenCalledWith(pf);
             });
 
             it("should set gameData.result", async () => {
@@ -120,7 +120,7 @@ describe("roundResultConsumer", () => {
 
     describe("generateFinalSeeds", () => {
         const result = chance.floating();
-        const finalSeeds = { clientSeeds: "clientSeeds", mergeClientSeed: "megedClient", mergeSeed: "merged", finalHash: "aaaa" };
+        const finalSeeds = { clientSeeds: "clientSeeds", mergeClientSeed: "mergedClient", mergeSeed: "merged", finalHash: "aaaa" };
 
         beforeEach(() => {
             definition.generateResult.mockReturnValueOnce(result);
@@ -149,41 +149,6 @@ describe("roundResultConsumer", () => {
 
             // Assert
             expect(gameData.pf.mergeSeed).toBe(finalSeeds.mergeSeed);
-        });
-    });
-
-    describe("generateFinalSeeds", () => {
-        const mergeClientSeed = chance.string();
-        const sha512Hash = chance.guid();
-        const mergeSeed = pf.serverSeed + mergeClientSeed;
-
-        beforeEach(() => {
-            Helpers.SeedHelper.getMergeClientSeed = jest.fn().mockReturnValueOnce(mergeClientSeed);
-            Helpers.SeedHelper.getSHA512Hash = jest.fn().mockReturnValueOnce(sha512Hash);
-        });
-
-        it("should call getMergeClientSeed", () => {
-            // Act
-            consumer.generateFinalSeeds(pf);
-
-            // Assert
-            expect(Helpers.SeedHelper.getMergeClientSeed).toHaveBeenCalledWith(pf.clientSeeds);
-        });
-
-        it("should call getMergeClientSeed", () => {
-            // Act
-            consumer.generateFinalSeeds(pf);
-
-            // Assert
-            expect(Helpers.SeedHelper.getSHA512Hash).toHaveBeenCalledWith(mergeSeed);
-        });
-
-        it("should return pf data", () => {
-            // Act
-            const result = consumer.generateFinalSeeds(pf);
-
-            // Assert
-            expect(result).toStrictEqual({ clientSeeds: pf.clientSeeds, mergeClientSeed, mergeSeed, finalHash: sha512Hash });
         });
     });
 

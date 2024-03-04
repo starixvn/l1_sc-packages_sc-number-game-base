@@ -18,11 +18,11 @@ describe("roundResultPublisher", () => {
         serverSeed: chance.guid(),
         serverSeedHash: chance.guid(),
         clientSeeds: [
-            { player1: chance.integer({ min: 0, max: 9999 }).toString() },
-            { player2: chance.integer({ min: 0, max: 9999 }).toString() },
-            { player3: chance.integer({ min: 0, max: 9999 }).toString() },
-            { player4: chance.integer({ min: 0, max: 9999 }).toString() },
-            { player5: chance.integer({ min: 0, max: 9999 }).toString() },
+            { name: "player1", clientSeed: chance.integer({ min: 0, max: 9999 }).toString() },
+            { name: "player2", clientSeed: chance.integer({ min: 0, max: 9999 }).toString() },
+            { name: "player3", clientSeed: chance.integer({ min: 0, max: 9999 }).toString() },
+            { name: "player4", clientSeed: chance.integer({ min: 0, max: 9999 }).toString() },
+            { name: "player5", clientSeed: chance.integer({ min: 0, max: 9999 }).toString() },
         ],
         finalHash: chance.guid(),
         mergeClientSeed: "",
@@ -39,32 +39,6 @@ describe("roundResultPublisher", () => {
         publisher = new RoundResultPublisher("BacBall", gameData);
         publisher.publishToAllUsers = jest.fn();
         publisher.publishToAllAdmins = jest.fn();
-    });
-
-    describe("publishRoundResult", () => {
-        describe("when exist gameData.pf", () => {
-            beforeEach(() => {
-                publisher.gameData.pf = pf;
-            });
-
-            it("should publish to all users with result and pf info", () => {
-                // Act
-                publisher.publishRoundResult(roundResult);
-
-                // Assert
-                expect(publisher.publishToAllUsers).toHaveBeenCalledWith({
-                    finish: { ...roundResult, pf: { ...pf, ...roundResult } },
-                });
-            });
-
-            it("should publish to all admins", () => {
-                // Act
-                publisher.publishRoundResult(roundResult);
-
-                // Assert
-                expect(publisher.publishToAllAdmins).toHaveBeenCalledWith({ finish: roundResult });
-            });
-        });
     });
 
     describe("publishServerSeedHash", () => {

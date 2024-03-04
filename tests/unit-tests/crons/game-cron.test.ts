@@ -5,7 +5,6 @@ import { Core, Table } from "sc-game-base";
 import GameManagementApiClientFactory from "sc-game-base/src/core/game-management-api";
 import { GameCron } from "../../../src/crons";
 import { getBetOdds } from "../../../src/helpers";
-import { RoundResultConsumer } from "../../../src/event-consumers";
 import { ProvablyFairConsumer, UnsettledRoundConsumer } from "sc-game-base/src/core/event-consumers";
 
 jest.mock("../../../src/helpers", () => ({ getBetOdds: jest.fn() }));
@@ -23,11 +22,11 @@ describe("GameCron tests", () => {
     const unsettledRoundConsumer = stub<UnsettledRoundConsumer>();
 
     const durations = {
-        wholeRound: 134,
+        wholeRound: 142,
         placingBets: 25,
         lockingBet: 3,
         showingResult: 5,
-        wholeTurn: 33,
+        wholeTurn: 35,
         startingRound: 2,
     };
     let consumer: GameCron;
@@ -83,7 +82,7 @@ describe("GameCron tests", () => {
                     exec: jest.fn().mockReturnValue(unfinishedRound),
                 }),
             });
-            (consumer.definition as GameDefinition).getProbabilities = jest.fn().mockReturnValue({});
+            consumer.definition.getProbabilities = jest.fn().mockReturnValue({});
             (getBetOdds as jest.Mock).mockReturnValue({ choice1: 2 });
             consumer.gameData.gameConfigs.margin = [{ max: 100, choice1: 0.1 }];
 
@@ -91,9 +90,9 @@ describe("GameCron tests", () => {
             await consumer.start();
 
             // assert
-            expect((consumer.definition as GameDefinition).getProbabilities).toHaveBeenCalledWith(unfinishedRound.result);
+            expect(consumer.definition.getProbabilities).toHaveBeenCalledWith(unfinishedRound.result);
             expect(getBetOdds).toHaveBeenCalledWith({}, consumer.gameData.gameConfigs.margin);
-            expect((consumer.gameData as GameData).odds).toEqual({ choice1: 2 });
+            expect(consumer.gameData.odds).toEqual({ choice1: 2 });
         });
     });
 
@@ -107,6 +106,68 @@ describe("GameCron tests", () => {
         afterEach(() => {
             jest.clearAllMocks();
         });
+
+        describe("When at certain remaining time", () => {
+            const testCases = [...Array(142 + 1).keys()].map((t) => ({ remainingTime: t }));
+            const changingRoundTime = [141, 142];
+            const startingBetTime = [26, 61, 96, 131];
+            const startingLockTime = [3, 38, 73, 108];
+            const duringBetTime = [
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 36, 37, 38, 39, 40, 41, 42, 43,
+                44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84,
+                85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
+                122, 123, 124, 125, 126, 127, 128, 129, 130,
+            ];
+
+            it.each(testCases)("should return correct", async ({ remainingTime }) => {
+                // arrange
+                consumer.initRemainingTime = jest.fn();
+                consumer.gameData.disabled = false;
+                consumer.checkGameStatus = jest.fn();
+                consumer.gameData.remainingTime = remainingTime;
+
+                // act
+                const isChangingRoundTime = consumer.isChangingRoundTime(remainingTime);
+                const isStartingBetTime = consumer.isStartingBetTime(remainingTime, durations);
+                const isDuringBetTime = consumer.isDuringBetTime(remainingTime);
+                const isStartingLockTime = consumer.isStartingLockTime(remainingTime);
+                const isStartingGenerateResultWithPfTime = consumer.isStartingGenerateResultWithPfTime(remainingTime);
+
+                // assert
+                if (changingRoundTime.includes(remainingTime)) {
+                    expect(isStartingBetTime).toBe(false);
+                    expect(isChangingRoundTime).toBe(true);
+                    expect(isDuringBetTime).toBe(false);
+                    expect(isStartingLockTime).toBe(false);
+                    expect(isStartingGenerateResultWithPfTime).toBe(false);
+                }
+
+                if (startingBetTime.includes(remainingTime)) {
+                    expect(isStartingBetTime).toBe(true);
+                    expect(isChangingRoundTime).toBe(false);
+                    expect(isDuringBetTime).toBe(false);
+                    expect(isStartingLockTime).toBe(false);
+                    expect(isStartingGenerateResultWithPfTime).toBe(false);
+                }
+
+                if (duringBetTime.includes(remainingTime) && !startingLockTime.includes(remainingTime)) {
+                    expect(isStartingBetTime).toBe(false);
+                    expect(isChangingRoundTime).toBe(false);
+                    expect(isDuringBetTime).toBe(true);
+                    expect(isStartingLockTime).toBe(false);
+                    expect(isStartingGenerateResultWithPfTime).toBe(false);
+                }
+
+                if (startingLockTime.includes(remainingTime)) {
+                    expect(isStartingBetTime).toBe(false);
+                    expect(isChangingRoundTime).toBe(false);
+                    expect(isDuringBetTime).toBe(true);
+                    expect(isStartingLockTime).toBe(true);
+                    expect(isStartingGenerateResultWithPfTime).toBe(false);
+                }
+            });
+        });
+
         describe("when remaining === wholeRound", () => {
             it("should call checkGameStatus when remainingTime === wholeRound", async () => {
                 // arrange
@@ -123,21 +184,21 @@ describe("GameCron tests", () => {
             describe("initRemainingTime", () => {
                 beforeEach(() => {
                     consumer.initLastRound = jest.fn();
-                    (consumer.definition as GameDefinition).numberOfTurnsPerRound = 4;
+                    consumer.definition.numberOfTurnsPerRound = 4;
                     consumer.definition.durations = durations as any;
                     consumer.gameData.remainingTime = durations.wholeRound;
                     consumer.gameData.disabled = false;
                     consumer.checkGameStatus = jest.fn();
                 });
                 const testCases = [
-                    { drawId: 5, expectedRemainingTime: 133 },
-                    { drawId: 6, expectedRemainingTime: 98 },
-                    { drawId: 7, expectedRemainingTime: 65 },
-                    { drawId: 8, expectedRemainingTime: 32 },
+                    { drawId: 5, expectedRemainingTime: 141 },
+                    { drawId: 6, expectedRemainingTime: 103 },
+                    { drawId: 7, expectedRemainingTime: 68 },
+                    { drawId: 8, expectedRemainingTime: 33 },
                 ];
                 it.each(testCases)("should set correctly remaining time", async ({ drawId, expectedRemainingTime }) => {
                     // arrange
-                    (consumer.gameData as GameData).drawId = drawId;
+                    consumer.gameData.drawId = drawId;
 
                     // act
                     await consumer.proceed();
@@ -163,7 +224,7 @@ describe("GameCron tests", () => {
         });
 
         describe("when changing round time", () => {
-            it.each([133, 134])("should not do anything", async (remainingTime) => {
+            it.each([142, 141])("should not do anything", async (remainingTime) => {
                 // arrange
                 consumer.isStartingTime = jest.fn();
                 consumer.checkGameStatus = jest.fn();
@@ -195,7 +256,7 @@ describe("GameCron tests", () => {
                 jest.clearAllMocks();
             });
 
-            const testCases = [{ remainingTime: 26 }, { remainingTime: 59 }, { remainingTime: 92 }];
+            const testCases = [{ remainingTime: 26 }, { remainingTime: 61 }, { remainingTime: 96 }];
             it.each(testCases)("should call reset for new turn", async ({ remainingTime }) => {
                 // arrange
                 consumer.gameData.remainingTime = remainingTime;
@@ -210,7 +271,7 @@ describe("GameCron tests", () => {
             it.each(testCases)("should reset playerBetCount", async ({ remainingTime }) => {
                 // arrange
                 consumer.gameData.remainingTime = remainingTime;
-                (consumer.gameData as GameData).playerBetCount = { choice1: ["123"] };
+                consumer.gameData.playerBetCount = { choice1: ["123"] };
 
                 // act
                 await consumer.proceed();
@@ -235,7 +296,7 @@ describe("GameCron tests", () => {
                 consumer.gameData.remainingTime = remainingTime;
                 consumer.gameData.gameConfigs.margin = [];
                 (getBetOdds as jest.Mock).mockReturnValueOnce({ choice1: 10 });
-                ((consumer.definition as GameDefinition).getProbabilities as jest.Mock).mockReturnValueOnce({ choice1: 0.1 });
+                (consumer.definition.getProbabilities as jest.Mock).mockReturnValueOnce({ choice1: 0.1 });
 
                 // act
                 await consumer.proceed();
@@ -247,7 +308,7 @@ describe("GameCron tests", () => {
             it.each(testCases)("should publish new turn data", async ({ remainingTime }) => {
                 // arrange
                 consumer.gameData.remainingTime = remainingTime;
-                (consumer.gameData as GameData).drawId = 2;
+                consumer.gameData.drawId = 2;
                 (getBetOdds as jest.Mock).mockReturnValueOnce({ choice1: 10 });
 
                 // act
@@ -265,7 +326,7 @@ describe("GameCron tests", () => {
                 await consumer.proceed();
 
                 // assert
-                expect((consumer.roundResultConsumer as RoundResultConsumer).generateServerSeedAndPublishHash).toHaveBeenCalled();
+                expect(consumer.roundResultConsumer.generateServerSeedAndPublishHash).toHaveBeenCalled();
             });
 
             it.each(testCases)("should set settlementResultFromAdmin = {}", async ({ remainingTime }) => {
@@ -280,7 +341,7 @@ describe("GameCron tests", () => {
                 expect(consumer.gameData.settlementResultFromAdmin).toEqual({});
             });
 
-            const remainingTimeStartingNewRound = 125;
+            const remainingTimeStartingNewRound = 131;
             it("should reset for new round when starting a new round", async () => {
                 // arrange
                 consumer.gameData.remainingTime = remainingTimeStartingNewRound;
@@ -300,7 +361,7 @@ describe("GameCron tests", () => {
                 await consumer.proceed();
 
                 // assert
-                expect((consumer.gameData as GameData).odds).toEqual({ choice1: 1 });
+                expect(consumer.gameData.odds).toEqual({ choice1: 1 });
             });
 
             it("should call bot reset", async () => {
@@ -317,7 +378,7 @@ describe("GameCron tests", () => {
             it("should publish new turn data", async () => {
                 // arrange
                 consumer.gameData.remainingTime = remainingTimeStartingNewRound;
-                (consumer.gameData as GameData).drawId = 3;
+                consumer.gameData.drawId = 3;
 
                 // act
                 await consumer.proceed();
@@ -334,7 +395,7 @@ describe("GameCron tests", () => {
                 await consumer.proceed();
 
                 // assert
-                expect((consumer.roundResultConsumer as RoundResultConsumer).generateServerSeedAndPublishHash).toHaveBeenCalled();
+                expect(consumer.roundResultConsumer.generateServerSeedAndPublishHash).toHaveBeenCalled();
             });
 
             it("should set settlementResultFromAdmin = {}", async () => {
@@ -359,7 +420,7 @@ describe("GameCron tests", () => {
                 consumer.gameStatusPublisher.publishEndPlacingBetStatus = jest.fn();
                 consumer.bot = null as any;
             });
-            const testCases = [{ remainingTime: 3 }, { remainingTime: 36 }, { remainingTime: 69 }, { remainingTime: 102 }];
+            const testCases = [{ remainingTime: 3 }, { remainingTime: 38 }, { remainingTime: 73 }, { remainingTime: 108 }];
             it.each(testCases)("should call gameStatusPublisher.publishEndPlacingBetStatus", async ({ remainingTime }) => {
                 // arrange
                 consumer.gameData.remainingTime = remainingTime;
@@ -380,7 +441,7 @@ describe("GameCron tests", () => {
                 consumer.gameStatusPublisher.publishStartPlacingBetStatus = jest.fn();
             });
 
-            const testCases = [{ remainingTime: 0 }, { remainingTime: 33 }, { remainingTime: 66 }, { remainingTime: 99 }];
+            const testCases = [{ remainingTime: 0 }, { remainingTime: 35 }, { remainingTime: 70 }, { remainingTime: 105 }];
 
             it.each(testCases)("should call roundResultConsumer.generateResult", async ({ remainingTime }) => {
                 // arrange
@@ -450,30 +511,9 @@ describe("GameCron tests", () => {
                 { remainingTime: 2 },
                 { remainingTime: 3 },
                 { remainingTime: 4 },
-                { remainingTime: 5 },
-                { remainingTime: 6 },
-                { remainingTime: 7 },
-                { remainingTime: 8 },
+                { remainingTime: 23 },
+                { remainingTime: 24 },
                 { remainingTime: 25 },
-                { remainingTime: 34 },
-                { remainingTime: 35 },
-                { remainingTime: 36 },
-                { remainingTime: 37 },
-                { remainingTime: 38 },
-                { remainingTime: 57 },
-                { remainingTime: 58 },
-                { remainingTime: 68 },
-                { remainingTime: 69 },
-                { remainingTime: 70 },
-                { remainingTime: 71 },
-                { remainingTime: 72 },
-                { remainingTime: 91 },
-                { remainingTime: 101 },
-                { remainingTime: 102 },
-                { remainingTime: 103 },
-                { remainingTime: 122 },
-                { remainingTime: 123 },
-                { remainingTime: 124 },
             ];
             it.each(testCases)("should run bot", async ({ remainingTime }) => {
                 // arrange
