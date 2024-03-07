@@ -6,13 +6,18 @@ export default class RunningRoundInfoPublisher extends Core.BaseEventPublishers.
     publish() {
         super.publish();
 
-        this.publishPlayerBetCount();
+        this.publishBetPercentageAndPlayerBetCount();
     }
 
-    publishPlayerBetCount() {
+    publishBetPercentageAndPlayerBetCount() {
+        const payload = this.getBetPercentageAndPlayerBetCount();
+        this.publishToAllUsers(payload);
+    }
+
+    getBetPercentageAndPlayerBetCount() {
         const betCount = (this.gameData as GameData).playerBetCount;
         const betPercentage = BetCountHelper.calculateBetPercentage(betCount);
         const playerBetCount = BetCountHelper.calculatePlayerBetCount(betCount);
-        this.publishToAllUsers({ betPercentage, playerBetCount });
+        return { betPercentage, playerBetCount };
     }
 }

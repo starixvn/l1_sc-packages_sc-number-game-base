@@ -3,6 +3,7 @@ import { BaseEventConsumers } from "sc-game-base/src/core";
 import notices from "../constants/notices";
 import GameDefinition, { Duration } from "../game-definition";
 import GameData from "../game-data";
+import { getCurrentTimeOfTurn } from "../helpers";
 
 type BetPayload = {
     amount: number;
@@ -28,9 +29,8 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
     composeBettingTimeValidationCriteria(_: number) {
         const configs = this.gameData.gameConfigs;
         const numberOfTurnsPerRound = (this.definition as GameDefinition).numberOfTurnsPerRound;
-        const turn = (this.gameData as GameData).drawId % numberOfTurnsPerRound || numberOfTurnsPerRound;
         const { placingBets, showingResult, wholeTurn, lockingBet } = this.definition.durations as Duration;
-        const remainingTime = this.gameData.remainingTime - wholeTurn * (numberOfTurnsPerRound - turn);
+        const time = getCurrentTimeOfTurn(this.gameData.remainingTime, wholeTurn, numberOfTurnsPerRound);
         const showingResultTime = placingBets + showingResult;
 
         return [
@@ -39,11 +39,11 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
                 notice: this.getNoticeObj(helpers.noticeHelper.invalidBet),
             },
             {
-                failure: remainingTime >= placingBets && remainingTime <= showingResultTime,
+                failure: time >= placingBets && time <= showingResultTime,
                 notice: this.getNoticeObj(helpers.noticeHelper.cannotPlaceBet),
             },
             {
-                failure: remainingTime < lockingBet || remainingTime > showingResultTime,
+                failure: time < lockingBet || time > showingResultTime,
                 notice: this.getNoticeObj(helpers.noticeHelper.placeBetNextRound),
             },
         ];

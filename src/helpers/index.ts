@@ -3,5 +3,15 @@ import { getBetOdds } from "./calculate-odds";
 import { getFilterObjectWithAllowedKeys } from "./object-filtered";
 import { getRandomNumberFromArray, getRandomIndex } from "./random-helper";
 import { generateRemainingBalls } from "./draw-ball-helper";
+import { getCurrentTimeOfTurn, getCurrentTurn } from "./time-helper";
 
-export { BetCountHelper, getBetOdds, getFilterObjectWithAllowedKeys, getRandomNumberFromArray, generateRemainingBalls, getRandomIndex };
+export {
+    BetCountHelper,
+    getBetOdds,
+    getFilterObjectWithAllowedKeys,
+    getRandomNumberFromArray,
+    generateRemainingBalls,
+    getRandomIndex,
+    getCurrentTimeOfTurn,
+    getCurrentTurn,
+};

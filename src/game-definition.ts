@@ -19,6 +19,7 @@ export default class GameDefinition extends BaseGameDefinition {
             numberOfRoundHistory = 100,
             historyPageSize = 8,
             provablyFair = true,
+            botSettings = { ratio: { options: 100 }, options: [] },
         }: GameSettings,
         generateResult: Function,
         settle: Function,
@@ -33,9 +34,11 @@ export default class GameDefinition extends BaseGameDefinition {
         );
         this.numberOfTurnsPerRound = numberOfTurnsPerRound;
         this.getProbabilities = getProbabilities;
+        this.botSettings = botSettings;
     }
     numberOfTurnsPerRound: number;
     getProbabilities: Function;
+    botSettings: BotSettings;
 }
 export type Duration = {
     wholeRound: number;
@@ -57,4 +60,11 @@ export type GameSettings = {
     numberOfRoundHistory?: number;
     historyPageSize?: number;
     provablyFair?: boolean;
+    botSettings?: BotSettings;
+};
+export type BotSettings = {
+    ratio: {
+        [key: string]: number;
+    };
+    [key: string]: string[] | { [key: string]: number };
 };

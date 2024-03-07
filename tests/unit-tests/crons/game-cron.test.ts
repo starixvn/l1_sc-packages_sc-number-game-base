@@ -7,7 +7,7 @@ import { GameCron } from "../../../src/crons";
 import { getBetOdds } from "../../../src/helpers";
 import { ProvablyFairConsumer, UnsettledRoundConsumer } from "sc-game-base/src/core/event-consumers";
 
-jest.mock("../../../src/helpers", () => ({ getBetOdds: jest.fn() }));
+jest.mock("../../../src/helpers/calculate-odds", () => ({ getBetOdds: jest.fn() }));
 describe("GameCron tests", () => {
     const definition = stub<GameDefinition>();
     const gameData = stub<GameData>();
@@ -482,6 +482,7 @@ describe("GameCron tests", () => {
             describe("when NOT having gameData.result value", () => {
                 it.each(testCases)("should NOT call settleGameRoundConsumer.settleRound", async ({ remainingTime }) => {
                     // arrange
+                    consumer.logService = { logError: jest.fn() };
                     consumer.gameData.result = null;
                     consumer.gameData.remainingTime = remainingTime;
 
@@ -541,6 +542,7 @@ describe("GameCron tests", () => {
         describe("when remainingTime === 0", () => {
             it("should reset time ", async () => {
                 // arrange
+                consumer.settleTurn = jest.fn();
                 consumer.gameData.remainingTime = 0;
                 // act
                 await consumer.proceed();
