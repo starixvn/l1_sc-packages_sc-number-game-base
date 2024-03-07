@@ -50,10 +50,10 @@ export default class InGameConsumer extends TableInGameConsumer {
 
     getGameConfigs(currencyGroupId: string) {
         const { gameConfigs } = this.gameData;
-        const { odds, originalOdds, enableFreeBet, boostedChoices } = gameConfigs;
+        const { margin, originalOdds, enableFreeBet, boostedChoices } = gameConfigs;
         const settings = this.gameData.currencyGroupGames.find((x) => x.groupId.toString() === currencyGroupId);
 
-        return { ...settings, odds, originalOdds, enableFreeBet, boostedChoices };
+        return { ...settings, margin, originalOdds, enableFreeBet, boostedChoices };
     }
 
     async getRoundsHistory() {
