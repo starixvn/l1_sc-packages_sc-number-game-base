@@ -57,6 +57,7 @@ describe("GameCron tests", () => {
             consumer.queryLastResult = jest.fn();
             consumer.getSettingForNewRound = jest.fn();
             consumer.updateExchangeRates = jest.fn();
+            consumer.bot.resetInRoomTrackings = jest.fn();
         });
         it("should run correctly", async () => {
             // arrange
@@ -67,6 +68,7 @@ describe("GameCron tests", () => {
             await consumer.start();
 
             // assert
+            expect(consumer.bot.resetInRoomTrackings).toHaveBeenCalled();
             expect(consumer.queryLastResult).toHaveBeenCalled();
             expect(consumer.getSettingForNewRound).toHaveBeenCalled();
             expect(consumer.updateExchangeRates).toHaveBeenCalled();

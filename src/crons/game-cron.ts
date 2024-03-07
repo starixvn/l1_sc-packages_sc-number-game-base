@@ -7,6 +7,7 @@ import GameData from "../game-data";
 import { RoundResultConsumer } from "../event-consumers";
 import { getBetOdds, getCurrentTimeOfTurn, getCurrentTurn } from "../helpers";
 import { ProvablyFairConsumer, UnsettledRoundConsumer } from "sc-game-base/src/core/event-consumers";
+import Bot from "./bots";
 
 type Round = {
     id: number;
@@ -20,6 +21,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
     declare gameData: GameData;
     declare definition: GameDefinition;
     declare roundResultConsumer: RoundResultConsumer;
+    declare bot: Bot;
 
     constructor({
         definition,
@@ -74,6 +76,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
     }
 
     async start() {
+        await this.bot?.resetInRoomTrackings();
         await this.roundIdConsumer.initRoundId();
         await this.queryLastResult();
         await this.getSettingForNewRound();
