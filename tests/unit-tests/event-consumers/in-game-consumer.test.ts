@@ -57,7 +57,7 @@ describe("InGameConsumer tests", () => {
             consumer.gameData.chips = chips;
             const players: any[] = [];
             consumer.buildPlayersPayload = jest.fn().mockReturnValue(players);
-            const gameConfigs = { odds: { choice1: 0, choice2: 0 }, enableFreeBet: false, enabled: true };
+            const gameConfigs = { odds: { choice1: 0, choice2: 0 }, enableFreeBet: false, enabled: true, margin: "0" };
             consumer.gameData.gameConfigs = gameConfigs as any;
             const currencyGroupGames = [{ groupId: "group", maxBet: { choice1: 2000, choice2: 2000 } }];
             consumer.gameData.currencyGroupGames = currencyGroupGames;
@@ -76,7 +76,7 @@ describe("InGameConsumer tests", () => {
                 drawId: 2,
                 gameConfigs: {
                     maxBet: { choice1: 2000, choice2: 2000 },
-                    odds: gameConfigs.odds,
+                    margin: gameConfigs.margin,
                     enableFreeBet: gameConfigs.enableFreeBet,
                     boostedChoices: undefined,
                     groupId: "group",

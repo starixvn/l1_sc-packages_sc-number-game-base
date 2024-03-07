@@ -17,15 +17,17 @@ export default class RoundResultConsumer extends BaseEventConsumers.RoundResultC
 
         const finalSeeds = await this.getFinalSeeds(drawId, pf);
 
-        this.gameData.result = this.definition.generateResult({ finalHash: finalSeeds.finalHash, serverSeed: finalSeeds.serverSeed });
+        const { serverSeed, serverSeedHash } = pf;
+
+        this.gameData.pf = { ...finalSeeds, serverSeed, serverSeedHash };
+
+        this.gameData.result = this.definition.generateResult({ finalHash: finalSeeds.finalHash, serverSeed });
     }
 
     async getFinalSeeds(drawId: number, pf: ProvablyFair): Promise<ProvablyFair> {
         if (!this.definition.provablyFair) {
             return {} as ProvablyFair;
         }
-
-        const { serverSeed, serverSeedHash } = pf;
 
         const finalSeeds = this.generateFinalSeeds(pf);
 
@@ -35,8 +37,6 @@ export default class RoundResultConsumer extends BaseEventConsumers.RoundResultC
                 ...finalSeeds,
             }
         );
-
-        this.gameData.pf = { ...finalSeeds, serverSeed, serverSeedHash };
 
         return finalSeeds;
     }
