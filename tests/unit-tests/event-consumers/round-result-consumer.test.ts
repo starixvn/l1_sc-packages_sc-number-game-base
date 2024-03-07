@@ -6,6 +6,7 @@ import { GameConfigs, ProvablyFair } from "sc-game-base/src/core/game-data";
 import { RoundResultPublisher } from "../../../src/event-publishers";
 import { GameDefinition } from "../../../src";
 import { Helpers } from "sc-game-base/src/core";
+import { CryptoHelper } from "sc-game-base/src/core/helpers";
 
 jest.mock("../../../src/helpers", () => {
     return {
@@ -82,22 +83,15 @@ describe("roundResultConsumer", () => {
             beforeEach(() => {
                 consumer.gameData.settlementResultFromAdmin = null;
                 consumer.definition.generateResult.mockReturnValue(result);
+                consumer.getFinalSeeds = jest.fn().mockReturnValue(pf);
             });
 
-            it("should call generateFinalSeeds", async () => {
+            it("should call getFinalSeeds", async () => {
                 // Act
                 await consumer.generateResult();
 
                 // Assert
-                expect(consumer.generateFinalSeeds).toHaveBeenCalledWith(pf);
-            });
-
-            it("should update resultsRepository", async () => {
-                // Act
-                await consumer.generateResult();
-
-                // Assert
-                expect(resultsRepository.findOneAndUpdate).toHaveBeenCalledWith({ drawId: drawId }, pf);
+                expect(consumer.getFinalSeeds).toHaveBeenCalledWith(drawId, pf);
             });
 
             it("should call definition.generateResult", async () => {
@@ -105,7 +99,7 @@ describe("roundResultConsumer", () => {
                 await consumer.generateResult();
 
                 // Assert
-                expect(definition.generateResult).toHaveBeenCalledWith(pf);
+                expect(definition.generateResult).toHaveBeenCalledWith({ finalHash: pf.finalHash, serverSeed: pf.serverSeed });
             });
 
             it("should set gameData.result", async () => {
@@ -114,6 +108,31 @@ describe("roundResultConsumer", () => {
 
                 // Assert
                 expect(gameData.result).toBe(result);
+            });
+        });
+    });
+
+    describe("getFinalSeeds", () => {
+        describe("when this.definition.provablyFair = true ", () => {
+            beforeEach(() => {
+                consumer.definition.provablyFair = true;
+                consumer.generateFinalSeeds = jest.fn().mockReturnValue(pf);
+            });
+
+            it("should call generateFinalSeeds", async () => {
+                // Act
+                await consumer.getFinalSeeds(drawId, pf);
+
+                // Assert
+                expect(consumer.generateFinalSeeds).toHaveBeenCalledWith(pf);
+            });
+
+            it("should update resultsRepository", async () => {
+                // Act
+                await consumer.getFinalSeeds(drawId, pf);
+
+                // Assert
+                expect(resultsRepository.findOneAndUpdate).toHaveBeenCalledWith({ drawId: drawId }, pf);
             });
         });
     });
@@ -200,9 +219,14 @@ describe("roundResultConsumer", () => {
     });
 
     describe("createResultRecordPf", () => {
-        it("should call resultsRepository.create", async () => {
+        beforeEach(() => {
+            CryptoHelper.encrypt = jest.fn().mockReturnValue("encrypted server seed");
+        });
+
+        it("should call CryptoHelper.encrypt", async () => {
             // Arrange
             const { serverSeed, serverSeedHash } = pf;
+
             const mockDate = new Date();
             jest.spyOn(global, "Date").mockImplementation(() => mockDate);
 
@@ -210,7 +234,22 @@ describe("roundResultConsumer", () => {
             await consumer.createResultRecord(serverSeed, serverSeedHash);
 
             // Assert
-            expect(resultsRepository.create).toHaveBeenCalledWith({ drawId, roundId, serverSeedHash, serverSeed, time: mockDate });
+            expect(CryptoHelper.encrypt).toHaveBeenCalledWith(serverSeed);
+        });
+
+        it("should call resultsRepository.create", async () => {
+            // Arrange
+            const { serverSeed, serverSeedHash } = pf;
+            const encryptedServerSeed = CryptoHelper.encrypt(serverSeed);
+
+            const mockDate = new Date();
+            jest.spyOn(global, "Date").mockImplementation(() => mockDate);
+
+            // Act
+            await consumer.createResultRecord(serverSeed, serverSeedHash);
+
+            // Assert
+            expect(resultsRepository.create).toHaveBeenCalledWith({ drawId, roundId, serverSeedHash, encryptedServerSeed, time: mockDate });
         });
     });
 });

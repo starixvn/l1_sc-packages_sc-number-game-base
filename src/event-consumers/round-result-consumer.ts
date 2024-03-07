@@ -1,10 +1,12 @@
 import { ProvablyFair } from "sc-game-base/src/core/game-data";
 import { BaseEventConsumers } from "sc-game-base/src/core";
 import GameData from "../game-data";
-import { SeedHelper, ServerSeedHelper } from "sc-game-base/src/core/helpers";
+import { SeedHelper, ServerSeedHelper, CryptoHelper } from "sc-game-base/src/core/helpers";
+import GameDefinition from "../game-definition";
 
 export default class RoundResultConsumer extends BaseEventConsumers.RoundResultConsumer {
     declare gameData: GameData;
+    declare definition: GameDefinition;
     async generateResult() {
         const { drawId, pf, settlementResultFromAdmin: resultFromAdmin } = this.gameData;
 
@@ -15,10 +17,16 @@ export default class RoundResultConsumer extends BaseEventConsumers.RoundResultC
 
         const finalSeeds = await this.getFinalSeeds(drawId, pf);
 
-        this.gameData.result = this.definition.generateResult(finalSeeds);
+        this.gameData.result = this.definition.generateResult({ finalHash: finalSeeds.finalHash, serverSeed: finalSeeds.serverSeed });
     }
 
     async getFinalSeeds(drawId: number, pf: ProvablyFair): Promise<ProvablyFair> {
+        if (!this.definition.provablyFair) {
+            return {} as ProvablyFair;
+        }
+
+        const { serverSeed, serverSeedHash } = pf;
+
         const finalSeeds = this.generateFinalSeeds(pf);
 
         await this.resultsRepository.findOneAndUpdate(
@@ -28,27 +36,19 @@ export default class RoundResultConsumer extends BaseEventConsumers.RoundResultC
             }
         );
 
-        this.gameData.pf = { ...finalSeeds };
+        this.gameData.pf = { ...finalSeeds, serverSeed, serverSeedHash };
 
         return finalSeeds;
     }
 
-    generateFinalSeeds(pf: ProvablyFair) {
-        const { clientSeeds } = pf;
-
-        const mergeClientSeed = clientSeeds
-            .reduce((sumClientSeeds, clientSeed) => sumClientSeeds + Number(clientSeed.clientSeed), 0)
-            .toString();
-
-        return { ...pf, mergeClientSeed };
-    }
-
     async createResultRecord(serverSeed: string, serverSeedHash: string) {
+        const encryptedServerSeed = CryptoHelper.encrypt(serverSeed);
+
         await this.resultsRepository.create({
             roundId: this.gameData.roundId,
             drawId: this.gameData.drawId,
             serverSeedHash: serverSeedHash,
-            serverSeed: serverSeed,
+            encryptedServerSeed: encryptedServerSeed,
             time: new Date(),
         });
     }

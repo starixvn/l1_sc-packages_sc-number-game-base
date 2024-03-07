@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const resultSchema = new mongoose.Schema({
     roundId: { type: Number, required: true },
     drawId: { type: Number, required: true },
-    serverSeed: { type: String },
+    encryptedServerSeed: { iv: { type: String }, content: { type: String } },
     serverSeedHash: { type: String },
     clientSeeds: { type: Array, default: [] },
     mergeClientSeed: { type: String },

@@ -1,27 +1,30 @@
 import { BaseEventConsumers } from "sc-game-base/src/core";
 import GameData from "../game-data";
-import { ProvablyFair } from "sc-game-base/src/core/game-data";
+import { CryptoHelper } from "sc-game-base/src/core/helpers";
 
 export default class UnsettledRoundConsumer extends BaseEventConsumers.UnsettledRoundConsumer {
     declare gameData: GameData;
 
     async proceed() {
         if (this.gameData.lastResultRecord) {
-            const unsettledBets = await this.getUnsettledBets();
-            await this.generateResult(unsettledBets);
+            await this.generateResult();
 
             await this.settleGameRoundConsumer.settleRound();
         }
     }
 
-    async generateResult(unsettledBets: any) {
-        const { serverSeed, serverSeedHash } = this.gameData.lastResultRecord as ProvablyFair;
+    async generateResult() {
+        const { encryptedServerSeed, serverSeedHash, finalHash } = this.gameData.lastResultRecord;
+        const serverSeed = CryptoHelper.decrypt(encryptedServerSeed);
 
-        this.provablyFairConsumer.addBets(...unsettledBets);
-        await this.provablyFairConsumer.updateClientSeedFromBets();
-        this.provablyFairConsumer.setServerSeed(serverSeed);
-        this.provablyFairConsumer.setServerSeedHash(serverSeedHash);
-        await this.roundResultConsumer.generateResult();
+        if (finalHash) {
+            this.gameData.result = this.definition.generateResult({ finalHash, serverSeed });
+        } else {
+            await this.provablyFairConsumer.updateClientSeedFromBets();
+            this.provablyFairConsumer.setServerSeed(serverSeed);
+            this.provablyFairConsumer.setServerSeedHash(serverSeedHash);
+            await this.roundResultConsumer.generateResult();
+        }
     }
 
     async getUnsettledBets() {
