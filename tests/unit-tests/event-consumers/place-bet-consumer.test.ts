@@ -118,6 +118,7 @@ describe("PlaceBetConsumer test", () => {
             consumer.getNoticeObj = jest.fn().mockReturnValue("");
             consumer.anyChoiceExceedItsMaxBet = jest.fn().mockReturnValue(false);
             consumer.anyChoiceBelowMinBet = jest.fn().mockReturnValue(false);
+            consumer.anyChoiceExceedItsMaxWin = jest.fn().mockReturnValue(false);
             consumer.gameData.currencyGroupGames = [{ groupId: player.session.currencyGroupId, minBet: 10, maxBet: 50 }];
             consumer.gameData.gameConfigs = {} as any;
         });
@@ -251,7 +252,7 @@ describe("PlaceBetConsumer test", () => {
             consumer.validateBetRequest = jest.fn().mockReturnValueOnce(false);
             consumer.validateRequestParams = jest.fn().mockReturnValueOnce(true);
             const payload = { betChoices: { player: 10, tie: 20 }, clientSeed: "0" };
-            (consumer.gameData as GameData).drawId = 1;
+            consumer.gameData.drawId = 1;
 
             // act
             // @ts-ignore
@@ -264,7 +265,7 @@ describe("PlaceBetConsumer test", () => {
             // arrange
             consumer.validateRequestParams = jest.fn().mockReturnValueOnce(false);
             const payload = { betChoices: { player: 10, tie: 20 }, clientSeed: "0" };
-            (consumer.gameData as GameData).drawId = 1;
+            consumer.gameData.drawId = 1;
 
             // act
             // @ts-ignore
@@ -297,6 +298,32 @@ describe("PlaceBetConsumer test", () => {
             expect(actual).toBe(expected);
         });
     });
+
+    describe("anyChoiceExceedItsMaxWin", () => {
+        const testCases = [
+            { betChoices: { player: 10, banker: 10 }, betTracks: {}, maxBet: 100, expected: false },
+            { betChoices: { player: 10, banker: 10 }, betTracks: { player: 10, banker: 10 }, maxBet: 100, expected: false },
+            { betChoices: { player: 10 }, betTracks: { banker: 10 }, maxBet: 100, expected: false },
+            { betChoices: { player: 10, banker: 10 }, betTracks: { banker: 10 }, maxBet: 39, expected: true },
+            { betChoices: { player: 10, banker: 10 }, betTracks: { player: 10 }, maxBet: 60, expected: false },
+            { betChoices: { player: 20 }, betTracks: {}, maxBet: 100, expected: false },
+            { betChoices: { player: 30 }, betTracks: {}, maxBet: 50, expected: true },
+        ];
+
+        it.each(testCases)("should return expected", ({ betChoices, betTracks, maxBet, expected }) => {
+            // arrange
+            consumer.gameData.odds = { player: 2, banker: 2 };
+            const configs = { maxWinPerRound: 1 };
+
+            // act
+            // @ts-ignore
+            const actual = consumer.anyChoiceExceedItsMaxWin(betChoices, betTracks, configs, maxBet);
+
+            // assert
+            expect(actual).toBe(expected);
+        });
+    });
+
     describe("anyChoiceBelowMinBet", () => {
         const testCases = [
             { betChoices: { player: 10, tie: 1 }, expected: true },

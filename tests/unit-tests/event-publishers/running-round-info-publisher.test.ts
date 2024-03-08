@@ -21,7 +21,7 @@ describe("RunningRoundInfoPublisher", () => {
         });
         it("should call supper.publish", () => {
             // arrange
-            publisher.publishPlayerBetCount = jest.fn();
+            publisher.publishBetPercentageAndPlayerBetCount = jest.fn();
 
             // act
             publisher.publish();

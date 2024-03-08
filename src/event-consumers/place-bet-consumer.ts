@@ -15,6 +15,7 @@ type BetPayload = {
 };
 
 export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsumer {
+    declare gameData: GameData;
     validateBetRequestParams(request: BetPayload) {
         const { betChoices } = request;
 
@@ -82,6 +83,10 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
                 failure: totalAmountOfExistingBets + totalAmount > maxBet,
                 notice: this.getNoticeObj(helpers.noticeHelper.maxBet, { maxBet }),
             },
+            {
+                failure: this.anyChoiceExceedItsMaxWin(betChoices, betTracks, configs, maxBet),
+                notice: this.getNoticeObj(notices.maxWinOfAnyChoiceReached),
+            },
         ];
     }
 
@@ -125,7 +130,7 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
     consume(player: any, payload: BetPayload): void {
         Object.assign(payload, {
             amount: Object.values(payload.betChoices).reduce((total, value) => total + value, 0) >> 0,
-            drawId: +payload.drawId || (this.gameData as GameData).drawId,
+            drawId: +payload.drawId || this.gameData.drawId,
             mode: payload.m ?? this.DisplayMode.Landscape,
             receivedTime: new Date(),
             freeBet: payload.freeBet ?? false,
@@ -173,6 +178,16 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
             const amount = betChoices[choice];
             const currentBetAmount = betTracks[choice] ?? 0;
             return amount > maxBetPerChoice || currentBetAmount + amount > maxBetPerChoice;
+        });
+    }
+
+    anyChoiceExceedItsMaxWin(betChoices: Record<string, number>, betTracks: Record<string, number>, configs: any, maxBet: number) {
+        const maxWinPerRound = configs.maxWinPerRound;
+        const odds = this.gameData.odds;
+        return Object.keys(betChoices).some((choice) => {
+            const currentBetAmount = betTracks[choice] ?? 0;
+            const choiceOdds = odds?.[choice] ?? 1;
+            return maxWinPerRound > 0 && maxBet > 0 && (betChoices[choice] + currentBetAmount) * choiceOdds > maxWinPerRound * maxBet;
         });
     }
 
