@@ -10,7 +10,7 @@ export default class RoundResultConsumer extends BaseEventConsumers.RoundResultC
     async generateResult() {
         const { drawId, pf, settlementResultFromAdmin: resultFromAdmin } = this.gameData;
 
-        if (drawId === resultFromAdmin?.drawId) {
+        if (resultFromAdmin?.result) {
             this.gameData.result = resultFromAdmin.result;
             return;
         }
