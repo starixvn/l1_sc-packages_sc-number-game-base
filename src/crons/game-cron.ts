@@ -139,7 +139,6 @@ export default class GameCron extends Table.Crons.TableGameCron {
             this.gameStatusPublisher.publishStartPlacingBetStatus();
 
             await this.roundResultConsumer.generateServerSeedAndPublishHash();
-            this.gameData.settlementResultFromAdmin = {};
         }
 
         if (this.isDuringBetTime(remainingTime)) {

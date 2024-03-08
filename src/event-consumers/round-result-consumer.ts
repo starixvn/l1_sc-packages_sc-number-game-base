@@ -12,6 +12,7 @@ export default class RoundResultConsumer extends BaseEventConsumers.RoundResultC
 
         if (resultFromAdmin?.result) {
             this.gameData.result = resultFromAdmin.result;
+            this.gameData.settlementResultFromAdmin = {};
             return;
         }
 
