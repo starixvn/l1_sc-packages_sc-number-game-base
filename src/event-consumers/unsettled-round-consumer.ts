@@ -20,7 +20,7 @@ export default class UnsettledRoundConsumer extends BaseEventConsumers.Unsettled
         if (finalHash) {
             this.gameData.result = this.definition.generateResult({ finalHash, serverSeed });
         } else {
-            await this.provablyFairConsumer.updateClientSeedFromBets();
+            await this.provablyFairConsumer.updateClientSeedFromDatabase();
             this.provablyFairConsumer.setServerSeed(serverSeed);
             this.provablyFairConsumer.setServerSeedHash(serverSeedHash);
             await this.roundResultConsumer.generateResult();
