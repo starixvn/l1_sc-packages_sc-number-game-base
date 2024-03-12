@@ -1,45 +1,29 @@
-import { ProvablyFair } from "sc-game-base/src/core/game-data";
 import { BaseEventConsumers } from "sc-game-base/src/core";
 import GameData from "../game-data";
-import { SeedHelper, ServerSeedHelper, CryptoHelper } from "sc-game-base/src/core/helpers";
+import { CryptoHelper } from "sc-game-base/src/core/helpers";
 import GameDefinition from "../game-definition";
 
 export default class RoundResultConsumer extends BaseEventConsumers.RoundResultConsumer {
     declare gameData: GameData;
     declare definition: GameDefinition;
-    async generateResult() {
-        const { drawId, pf, settlementResultFromAdmin: resultFromAdmin } = this.gameData;
+    generateResultFromAdmin() {
+        const { settlementResultFromAdmin: resultFromAdmin } = this.gameData;
 
         if (resultFromAdmin?.result) {
             this.gameData.result = resultFromAdmin.result;
             this.gameData.settlementResultFromAdmin = {};
-            return;
+            return true;
         }
 
-        const finalSeeds = await this.getFinalSeeds(drawId, pf);
-
-        const { serverSeed, serverSeedHash } = pf;
-
-        this.gameData.pf = { ...finalSeeds, serverSeed, serverSeedHash };
-
-        this.gameData.result = this.definition.generateResult({ finalHash: finalSeeds.finalHash, serverSeed });
+        return false;
     }
 
-    async getFinalSeeds(drawId: number, pf: ProvablyFair): Promise<ProvablyFair> {
-        if (!this.definition.provablyFair) {
-            return {} as ProvablyFair;
-        }
+    getResultFilter() {
+        return { drawId: this.gameData.drawId };
+    }
 
-        const finalSeeds = this.generateFinalSeeds(pf);
-
-        await this.resultsRepository.findOneAndUpdate(
-            { drawId },
-            {
-                ...finalSeeds,
-            }
-        );
-
-        return finalSeeds;
+    getDataForGenerateResult() {
+        return { finalHash: this.gameData.pf.finalHash, serverSeed: this.gameData.pf.serverSeed };
     }
 
     async createResultRecord(serverSeed: string, serverSeedHash: string) {
@@ -52,22 +36,5 @@ export default class RoundResultConsumer extends BaseEventConsumers.RoundResultC
             encryptedServerSeed: encryptedServerSeed,
             time: new Date(),
         });
-    }
-
-    async generateServerSeedAndPublishHash() {
-        const serverSeed = this.generateSeverSeed();
-        const serverSeedHash = SeedHelper.getSHA256Hash(serverSeed);
-
-        this.gameData.pf = { ...this.gameData.pf, serverSeed, serverSeedHash };
-
-        await this.createResultRecord(serverSeed, serverSeedHash);
-
-        this.roundResultPublisher.publishServerSeedHash();
-    }
-
-    generateSeverSeed() {
-        const { randomMode } = this.gameData.gameConfigs;
-
-        return ServerSeedHelper.generateServerSeed(randomMode);
     }
 }
