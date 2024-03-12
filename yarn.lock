@@ -8780,8 +8780,8 @@ sc-common@1.8.1:
 
 sc-game-base@5.0.1-beta.7:
   version "5.0.1-beta.7"
-  resolved "http://npm.lumigame.com/sc-game-base/-/sc-game-base-5.0.1-beta.7.tgz#4053be8a20dd7994d16a566fa4ba6e6fa08de866"
-  integrity sha512-geWHTisGCSvbHVZp7OB2CtRY4aW3eP/QSURG7hDMhsI/HbGvZglmj9BSwd2yppAppQqRzgZ/04V2xjOOy7wnig==
+  resolved "http://npm.lumigame.com/sc-game-base/-/sc-game-base-5.0.1-beta.7.tgz#3f73f9d3d6c8d192ddf630ce93dc4e0a5f421f62"
+  integrity sha512-45MpfWAhmlYJii8hwGmCpKLU62NvydMFKqA9Z/AIfBNntSftXPJtgLY6+/LIVWmGVMdMIK7+XA8aEAY1afzK3Q==
   dependencies:
     awilix "^8.0.0"
     axios "^1.0.0"
