@@ -26,13 +26,4 @@ export default class UnsettledRoundConsumer extends BaseEventConsumers.Unsettled
             await this.roundResultConsumer.generateResult();
         }
     }
-
-    async getUnsettledBets() {
-        const playerBets = await this.betsRepository.find({ paid: false, drawId: this.gameData.drawId }).lean().exec();
-        const botBets = this.tempBetsRepository
-            ? await this.tempBetsRepository.find({ paid: false, drawId: this.gameData.drawId }).lean().exec()
-            : [];
-
-        return playerBets.concat(botBets);
-    }
 }

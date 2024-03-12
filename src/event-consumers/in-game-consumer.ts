@@ -10,7 +10,7 @@ export default class InGameConsumer extends TableInGameConsumer {
         const user = await this.getUserInfo(realPlayer);
         const roundHistory = await this.getRoundsHistory();
 
-        const { totalBets, roundId, exchangeRates, gameConfigs, odds, drawId, playerBetCount } = this.gameData as GameData;
+        const { totalBets, roundId, exchangeRates, gameConfigs, odds, drawId, playerBetCount, pf } = this.gameData as GameData;
         const { session } = realPlayer;
         const rate = exchangeRates.code[session.currencyCode] * session.multiplier;
         const configs = this.getGameConfigs(session.currencyGroupId);
@@ -33,6 +33,7 @@ export default class InGameConsumer extends TableInGameConsumer {
             players,
             betPercentage,
             playerBetCount: betCount,
+            serverSeedHash: pf.serverSeedHash,
         };
 
         const disabled = !gameConfigs?.enabled;
