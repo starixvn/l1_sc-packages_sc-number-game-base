@@ -196,7 +196,7 @@ export default class Bot extends Table.Crons.TableGameBot {
         return chipList.length > 0 ? chipList[0] : this.getMinBet();
     }
 
-    async insertOrUpdateBet(bot: any, choice: any, amount: number, currentBet: any) {
+    async insertOrUpdateBet(bot: any, choice: string, amount: number, currentBet: any) {
         const currentAmount = currentBet ? currentBet[choice] : 0;
         const update = { [choice]: amount + currentAmount };
         const create = {
