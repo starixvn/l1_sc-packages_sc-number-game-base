@@ -97,7 +97,9 @@ export default class Bot extends Table.Crons.TableGameBot {
 
     updateBalanceAndPublishBetPayload(botId: string, choice: string, amount: number, balance: number): void {
         this.updatePlayerBetCount(botId, choice);
-        super.updateBalanceAndPublishBetPayload(botId, choice, amount, balance);
+        if (this.gameData.players[botId]) {
+            this.gameData.players[botId].red = balance;
+        }
     }
 
     updatePlayerBetCount(playerId: string, choice: string) {

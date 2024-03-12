@@ -12,6 +12,7 @@ import {
 import { Bot, GameCron, ProcessBetQueue } from "./crons";
 import { RoundResultPublisher, RunningRoundInfoPublisher } from "./event-publishers";
 import { HistoryQuery, RoundQuery } from "./query-apis";
+import { PlaceBetPublisher } from "sc-game-base/src/core/event-publishers";
 
 export default class ContainerRegistry extends Table.TableContainerRegistry {
     registerApis() {
@@ -39,6 +40,7 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
         super.registerPublishers();
 
         this.container.register({
+            placeBetPublisher: asClass(PlaceBetPublisher).singleton(),
             roundResultPublisher: asClass(RoundResultPublisher).singleton(),
             runningRoundInfoPublisher: asClass(RunningRoundInfoPublisher).singleton(),
         });

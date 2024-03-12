@@ -53,8 +53,6 @@ describe("InGameConsumer tests", () => {
             const odds = { choice1: 2, choice2: 2 };
             (consumer.gameData as GameData).odds = odds;
             consumer.gameData.totalBets = totalBets;
-            const chips = { 1: { choice1: { 1: 1 } } };
-            consumer.gameData.chips = chips;
             const players: any[] = [];
             consumer.buildPlayersPayload = jest.fn().mockReturnValue(players);
             const gameConfigs = { odds: { choice1: 0, choice2: 0 }, enableFreeBet: false, enabled: true, margin: "0" };
@@ -88,7 +86,6 @@ describe("InGameConsumer tests", () => {
                 user: { ...player, rate: 1 },
                 resultHash: {},
                 players,
-                chips,
                 betPercentage: { choice1: 100 },
                 playerBetCount: { choice1: 1 },
                 remainingTime: 60,

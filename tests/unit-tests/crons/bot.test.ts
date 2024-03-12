@@ -78,16 +78,28 @@ describe("Bot tests", () => {
     });
 
     describe("updateBalanceAndPublishBetPayload", () => {
-        it("should run correctly", () => {
+        it("should call updatePlayerBetCount", () => {
             // arrange
-            TableGameBot.prototype.updateBalanceAndPublishBetPayload = jest.fn();
             bot.updatePlayerBetCount = jest.fn();
+            bot.gameData.players = {};
 
             // act
             bot.updateBalanceAndPublishBetPayload("1", "choice1", 10, 2000);
 
             // assert
             expect(bot.updatePlayerBetCount).toHaveBeenCalledWith("1", "choice1");
+        });
+
+        it("should update players into game data", () => {
+            // arrange
+            bot.updatePlayerBetCount = jest.fn();
+            bot.gameData.players = { bot1: { red: 2010 } };
+
+            // act
+            bot.updateBalanceAndPublishBetPayload("bot1", "choice1", 10, 2000);
+
+            // assert
+            expect(bot.gameData.players["bot1"]?.red).toBe(2000);
         });
     });
 
