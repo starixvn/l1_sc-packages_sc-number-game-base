@@ -1,8 +1,12 @@
 import { BaseEventConsumers } from "sc-game-base/src/core";
 import { getOrDefault } from "sc-game-base/src/core/game-management-api";
 import GameData from "../game-data";
+import GameDefinition from "../game-definition";
 
 export default class RoundIdConsumer extends BaseEventConsumers.RoundIdConsumer {
+    declare gameData: GameData;
+    declare definition: GameDefinition;
+
     async initRoundId() {
         const unfinishedRound = await this.getLastRound(false);
         if (unfinishedRound) {
@@ -23,25 +27,20 @@ export default class RoundIdConsumer extends BaseEventConsumers.RoundIdConsumer 
     async initDrawId() {
         const unfinishedRound = await this.getLastRound(false);
         if (unfinishedRound) {
-            (this.gameData as GameData).drawId = unfinishedRound.drawId + 1;
+            this.gameData.drawId = unfinishedRound.drawId + 1;
             return;
         }
         const lastRound = await this.getLastRound(true);
         if (lastRound) {
-            (this.gameData as GameData).drawId = lastRound.drawId + 1;
+            this.gameData.drawId = lastRound.drawId + 1;
         } else {
-            const archiveStatus = await this.getLastArchive();
-            (this.gameData as GameData).drawId = archiveStatus ? archiveStatus.lastArcId["_draws"] + 1 : 1;
+            this.gameData.drawId = ((await this.getLastArchiveRound()) - 1) * this.definition.numberOfTurnsPerRound + 1;
         }
     }
 
-    async getLastArchive() {
-        const { configName } = this.definition;
-        return getOrDefault(this.gameManagementApiClient.archiveStatus.getArchiveStatus(configName), null);
-    }
-
     async getLastArchiveRound() {
-        const archiveStatus = await this.getLastArchive();
+        const { configName } = this.definition;
+        const archiveStatus = await getOrDefault(this.gameManagementApiClient.archiveStatus.getArchiveStatus(configName), null);
 
         return archiveStatus ? (archiveStatus.lastArcId["_phiens"] ?? archiveStatus.lastArcId["_rounds"]) + 1 : 1;
     }

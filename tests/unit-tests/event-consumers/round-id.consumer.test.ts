@@ -76,7 +76,7 @@ describe("RoundIdConsumer tests", () => {
 
     describe("when not exist round", () => {
         const archiveStatus = {
-            lastArcId: { _rounds: 10, _draws: 40 },
+            lastArcId: { _rounds: 10 },
         };
         beforeEach(() => {
             const roundsRepository = {
@@ -99,15 +99,18 @@ describe("RoundIdConsumer tests", () => {
             await consumer.initRoundId();
 
             // assert
-            expect(gameData.roundId).toBe(archiveStatus.lastArcId._rounds + 1);
+            expect(gameData.roundId).toBe(11);
         });
 
-        it("should set drawId = drawId of archive status + 1", async () => {
+        it("should set drawId = roundId of archive status -1 * 4 + 1", async () => {
+            // arrange
+            consumer.definition.numberOfTurnsPerRound = 4;
+
             // act
             await consumer.initRoundId();
 
             // assert
-            expect(gameData.drawId).toBe(archiveStatus.lastArcId._draws + 1);
+            expect(gameData.drawId).toBe(41);
         });
     });
 
@@ -137,6 +140,9 @@ describe("RoundIdConsumer tests", () => {
         });
 
         it("should set drawId = 1", async () => {
+            // arrange
+            consumer.definition.numberOfTurnsPerRound = 4;
+
             // act
             await consumer.initRoundId();
 
