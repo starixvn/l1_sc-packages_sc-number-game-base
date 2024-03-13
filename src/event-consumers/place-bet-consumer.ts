@@ -102,7 +102,7 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
     composeHedgeBetValidationCriteria(betChoices: Record<string, number>, player: any) {
         const { betTracks } = this.gameData.ingame[player.profile.name] || { betTracks: {} };
 
-        const betChoiceKeys = [...Object.keys(betChoices), ...Object.keys(betTracks)];
+        const betChoiceKeys = [...Object.keys(betChoices), ...Object.keys(betTracks).filter((choice) => betTracks[choice] > 0)];
 
         const criteria = this.definition.hedgeBetGroups.reduce(
             (result, hedgeBetGroup: string[]) => {

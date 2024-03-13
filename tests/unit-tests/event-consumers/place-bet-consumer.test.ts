@@ -201,7 +201,7 @@ describe("PlaceBetConsumer test", () => {
         describe("when there are not hedge bets", () => {
             const testCases = [
                 { betChoices: { player: 20, tie: 20 }, betTracks: {} },
-                { betChoices: { player: 20 }, betTracks: { tie: 20 } },
+                { betChoices: { player: 20 }, betTracks: { tie: 20, banker: 0 } },
                 { betChoices: { tie: 20 }, betTracks: { tie: 20 } },
             ];
             it.each(testCases)("should return failure", ({ betChoices, betTracks }) => {
