@@ -1,3 +1,4 @@
+import { Model } from "mongoose";
 import { HistoryQuery } from "../../../src/query-apis";
 
 describe("RoundQuery tests", () => {
@@ -18,8 +19,8 @@ describe("RoundQuery tests", () => {
                     time: new Date(2024, 1, 1),
                     odds: {
                         player: 1.5,
-                        banker: 2
-                    }
+                        banker: 2,
+                    },
                 },
                 {
                     _id: 2,
@@ -34,8 +35,8 @@ describe("RoundQuery tests", () => {
                     time: new Date(2024, 1, 1),
                     odds: {
                         player: 1.25,
-                        banker: 1.75
-                    }
+                        banker: 1.75,
+                    },
                 },
                 {
                     _id: 3,
@@ -50,9 +51,9 @@ describe("RoundQuery tests", () => {
                     time: new Date(2024, 2, 1),
                     odds: {
                         player: 1.5,
-                        banker: 1.5
-                    }
-                }
+                        banker: 1.5,
+                    },
+                },
             ];
             const betLogs = [
                 {
@@ -93,19 +94,32 @@ describe("RoundQuery tests", () => {
                     time: new Date(2024, 2, 1),
                 },
             ];
+            const pfResult = [
+                {
+                    drawId: 1,
+                    mergeClientSeed: "1",
+                },
+                {
+                    drawId: 2,
+                    mergeClientSeed: "2",
+                },
+                {
+                    drawId: 3,
+                    mergeClientSeed: "3",
+                },
+            ];
+
             const execute = jest.fn().mockReturnValue(bets);
-            const betRepository = {
+            const betRepository: any = {
                 find: jest.fn().mockReturnValue({ lean: jest.fn().mockReturnValue({ exec: execute }) }),
-                countDocuments: jest.fn().mockReturnValue({ exec: jest.fn().mockReturnValue(bets.length) }),
+                countDocuments: jest.fn().mockReturnValue({ exec: () => Promise.resolve(betLogs.length) }),
             };
-            const roundQuery = {
+
+            const roundQuery: any = {
                 getOne: async (roundId: number) => rounds.find((round) => round.id === roundId),
-                convertSettlementResult: (roundResult: any) => {},
-                convertResult: (round: any) => {},
-                getList: (limit: number, projections?: any) => new Promise(() => {}),
-                roundsRepository: {},
             };
-            const betLogsRepository = {
+
+            const betLogsRepository: any = {
                 find: ({ roundId, drawId }: { roundId: number; drawId: number }, _: any, __: any) => {
                     return {
                         lean: jest.fn().mockReturnValue({
@@ -114,6 +128,17 @@ describe("RoundQuery tests", () => {
                     };
                 },
             };
+
+            const pfResultRepository: any = {
+                findOne: ({ drawId }: { drawId: number }, _: any, __: any) => {
+                    return {
+                        lean: jest.fn().mockReturnValue({
+                            exec: () => Promise.resolve(pfResult.filter((pf) => pf.drawId === drawId).at(0)),
+                        }),
+                    };
+                },
+            };
+
             const expected = {
                 history: {
                     betLogs: [
@@ -141,10 +166,11 @@ describe("RoundQuery tests", () => {
                                     choice: "player",
                                 },
                             ],
+                            pfResult: { drawId: 1, mergeClientSeed: "1" },
                             odds: {
                                 player: 1.5,
-                                banker: 2
-                            }
+                                banker: 2,
+                            },
                         },
                         {
                             drawId: 2,
@@ -156,7 +182,7 @@ describe("RoundQuery tests", () => {
                             result: {
                                 drawId: 2,
                                 player: 33,
-                                banker: 22
+                                banker: 22,
                             },
                             settlementResult: { drawId: 2, player: true, banker: false },
                             totalAmount: 10,
@@ -170,10 +196,11 @@ describe("RoundQuery tests", () => {
                                     choice: "banker",
                                 },
                             ],
+                            pfResult: { drawId: 2, mergeClientSeed: "2" },
                             odds: {
                                 player: 1.25,
-                                banker: 1.75
-                            }
+                                banker: 1.75,
+                            },
                         },
                         {
                             drawId: 3,
@@ -199,11 +226,12 @@ describe("RoundQuery tests", () => {
                                     choice: "tie",
                                 },
                             ],
+                            pfResult: { drawId: 3, mergeClientSeed: "3" },
                             odds: {
                                 player: 1.5,
-                                banker: 1.5
-                            }
-                        }
+                                banker: 1.5,
+                            },
+                        },
                     ],
                     page: 1,
                     pageSize: 3,
@@ -211,7 +239,7 @@ describe("RoundQuery tests", () => {
                 },
             };
 
-            const historyQuery = new HistoryQuery(roundQuery, betRepository, betLogsRepository);
+            const historyQuery = new HistoryQuery(roundQuery, betRepository, betLogsRepository, pfResultRepository);
 
             // act
             const actual = await historyQuery.queryHistory("player", 1, 3);

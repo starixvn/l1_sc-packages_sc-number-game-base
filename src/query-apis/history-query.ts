@@ -1,6 +1,20 @@
 import { Core } from "sc-game-base";
+import RoundQuery from "./round-query";
+import mongoose from "mongoose";
 
 export default class HistoryQuery extends Core.QueryApis.HistoryQuery {
+    resultRepository: mongoose.Model<any>;
+
+    constructor(
+        roundQuery: RoundQuery,
+        betsRepository: mongoose.Model<any>,
+        betLogsRepository: mongoose.Model<any>,
+        resultsRepository: mongoose.Model<any>
+    ) {
+        super(roundQuery, betsRepository, betLogsRepository);
+        this.resultRepository = resultsRepository;
+    }
+
     async queryHistory(player: any, page: number, pageSize: number): Promise<any> {
         if (page < 1 || !player) {
             return {};
@@ -31,6 +45,7 @@ export default class HistoryQuery extends Core.QueryApis.HistoryQuery {
                 bets.map(async (currentDrawBet: any) => {
                     const betLogDetails = await this.getBetLogDetailsEachDraw(player, currentDrawBet.drawId);
                     const drawResults = await this.getDrawResults(currentDrawBet.roundId, currentDrawBet.drawId);
+                    const pfResult = await this.getPFResult(currentDrawBet.drawId);
                     return {
                         ...this.convertBet(currentDrawBet),
                         roundId: currentDrawBet.roundId,
@@ -41,13 +56,23 @@ export default class HistoryQuery extends Core.QueryApis.HistoryQuery {
                         betwin: currentDrawBet.betwin,
                         time: currentDrawBet.time,
                         betLogDetails: betLogDetails,
-                        odds: currentDrawBet.odds
+                        pfResult: pfResult,
+                        odds: currentDrawBet.odds,
                     };
-                }
-            ));
+                })
+            );
         }
 
         return { history: { betLogs, page, pageSize, total } };
+    }
+
+    async getPFResult(drawId: number) {
+        const projection = {
+            _id: false,
+            __v: false,
+            __archive: false,
+        };
+        return this.resultRepository.findOne({ drawId }, projection).lean().exec();
     }
 
     getBetLogDetailsEachDraw(player: any, drawId: number) {
@@ -68,4 +93,3 @@ export default class HistoryQuery extends Core.QueryApis.HistoryQuery {
         return { result, settlementResult };
     }
 }
-
