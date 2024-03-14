@@ -44,7 +44,7 @@ export default class InGameConsumer extends TableInGameConsumer {
             : { ...payload, remainingTime: this.gameData.remainingTime };
     }
 
-    getOddsRange(margin?: Record<string, number>[]) {
+    getOddsRange(margin?: Record<string, number>[]): any {
         return margin;
     }
 
