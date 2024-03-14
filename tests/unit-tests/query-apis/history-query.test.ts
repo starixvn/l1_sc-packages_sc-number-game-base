@@ -166,7 +166,14 @@ describe("RoundQuery tests", () => {
                                     choice: "player",
                                 },
                             ],
-                            pfResult: { drawId: 1, mergeClientSeed: "1" },
+                            pfResult: {
+                                drawId: 1,
+                                mergeClientSeed: "1",
+                                roundResult: [
+                                    { drawId: 1, player: 34, banker: 12 },
+                                    { drawId: 2, player: 33, banker: 22 },
+                                ],
+                            },
                             odds: {
                                 player: 1.5,
                                 banker: 2,
@@ -196,7 +203,14 @@ describe("RoundQuery tests", () => {
                                     choice: "banker",
                                 },
                             ],
-                            pfResult: { drawId: 2, mergeClientSeed: "2" },
+                            pfResult: {
+                                drawId: 2,
+                                mergeClientSeed: "2",
+                                roundResult: [
+                                    { drawId: 1, player: 34, banker: 12 },
+                                    { drawId: 2, player: 33, banker: 22 },
+                                ],
+                            },
                             odds: {
                                 player: 1.25,
                                 banker: 1.75,
@@ -226,7 +240,7 @@ describe("RoundQuery tests", () => {
                                     choice: "tie",
                                 },
                             ],
-                            pfResult: { drawId: 3, mergeClientSeed: "3" },
+                            pfResult: { drawId: 3, mergeClientSeed: "3", roundResult: [{ drawId: 3, player: 39, banker: 22 }] },
                             odds: {
                                 player: 1.5,
                                 banker: 1.5,

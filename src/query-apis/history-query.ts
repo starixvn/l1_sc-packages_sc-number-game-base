@@ -44,19 +44,25 @@ export default class HistoryQuery extends Core.QueryApis.HistoryQuery {
             betLogs = await Promise.all(
                 bets.map(async (currentDrawBet: any) => {
                     const betLogDetails = await this.getBetLogDetailsEachDraw(player, currentDrawBet.drawId);
-                    const drawResults = await this.getDrawResults(currentDrawBet.roundId, currentDrawBet.drawId);
+                    const round = await this.roundQuery.getOne(currentDrawBet.roundId, { _id: false });
+                    const result = round.result.find((e: any) => e.drawId === currentDrawBet.drawId);
+                    const settlementResult = round.settlementResult.find((e: any) => e.drawId === currentDrawBet.drawId);
                     const pfResult = await this.getPFResult(currentDrawBet.drawId);
+
                     return {
                         ...this.convertBet(currentDrawBet),
                         roundId: currentDrawBet.roundId,
                         drawId: currentDrawBet.drawId,
-                        result: drawResults.result,
-                        settlementResult: drawResults.settlementResult,
+                        result: result,
+                        settlementResult: settlementResult,
                         totalAmount: currentDrawBet.totalAmount,
                         betwin: currentDrawBet.betwin,
                         time: currentDrawBet.time,
                         betLogDetails: betLogDetails,
-                        pfResult: pfResult,
+                        pfResult: {
+                            ...pfResult,
+                            roundResult: round.result,
+                        },
                         odds: currentDrawBet.odds,
                     };
                 })
@@ -84,12 +90,5 @@ export default class HistoryQuery extends Core.QueryApis.HistoryQuery {
             )
             .lean()
             .exec();
-    }
-
-    async getDrawResults(roundId: number, drawId: number) {
-        const round = await this.roundQuery.getOne(roundId, { _id: false });
-        const result = round.result.find((e: any) => e.drawId === drawId);
-        const settlementResult = round.settlementResult.find((e: any) => e.drawId === drawId);
-        return { result, settlementResult };
     }
 }
