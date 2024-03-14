@@ -331,18 +331,6 @@ describe("GameCron tests", () => {
                 expect(consumer.roundResultConsumer.generateServerSeedAndPublishHash).toHaveBeenCalled();
             });
 
-            it.each(testCases)("should set settlementResultFromAdmin = {}", async ({ remainingTime }) => {
-                // arrange
-                consumer.gameData.remainingTime = remainingTime;
-                consumer.gameData.lastResultRecord = null;
-
-                // act
-                await consumer.proceed();
-
-                // assert
-                expect(consumer.gameData.settlementResultFromAdmin).toEqual({});
-            });
-
             const remainingTimeStartingNewRound = 131;
             it("should reset for new round when starting a new round", async () => {
                 // arrange
@@ -399,18 +387,6 @@ describe("GameCron tests", () => {
                 // assert
                 expect(consumer.roundResultConsumer.generateServerSeedAndPublishHash).toHaveBeenCalled();
             });
-
-            it("should set settlementResultFromAdmin = {}", async () => {
-                // arrange
-                consumer.gameData.remainingTime = remainingTimeStartingNewRound;
-                consumer.gameData.lastResultRecord = null;
-
-                // act
-                await consumer.proceed();
-
-                // assert
-                expect(consumer.gameData.settlementResultFromAdmin).toEqual({});
-            });
         });
 
         describe("isStartingLockTime", () => {
@@ -464,7 +440,7 @@ describe("GameCron tests", () => {
                 await consumer.proceed();
 
                 // Assert
-                expect(consumer.provablyFairConsumer.updateClientSeedFromBets).toHaveBeenCalled();
+                expect(consumer.provablyFairConsumer.updateClientSeedsFromBets).toHaveBeenCalled();
             });
 
             describe("when having gameData.result value", () => {

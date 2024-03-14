@@ -67,11 +67,13 @@ describe("InGameConsumer tests", () => {
             consumer.getResultHash = jest.fn().mockReturnValue({});
             (BetCountHelper.calculateBetPercentage as jest.Mock).mockReturnValueOnce({ choice1: 100 });
             (BetCountHelper.calculatePlayerBetCount as jest.Mock).mockReturnValueOnce({ choice1: 1 });
+            consumer.getOddsRange = jest.fn().mockReturnValue({});
             const expected = {
                 roundId,
                 roundData: { drawId: 2 },
                 odds,
                 drawId: 2,
+                oddsRange: {},
                 gameConfigs: {
                     maxBet: { choice1: 2000, choice2: 2000 },
                     margin: gameConfigs.margin,

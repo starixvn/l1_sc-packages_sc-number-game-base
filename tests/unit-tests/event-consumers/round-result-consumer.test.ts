@@ -1,7 +1,7 @@
 import { stub } from "jest-auto-stub";
 import Chance from "chance";
 import GameData from "../../../src/game-data";
-import { RoundResultConsumer } from "../../../src/event-consumers";
+import { RoundResultConsumer, ProvablyFairConsumer } from "../../../src/event-consumers";
 import { GameConfigs, ProvablyFair } from "sc-game-base/src/core/game-data";
 import { RoundResultPublisher } from "../../../src/event-publishers";
 import { GameDefinition } from "../../../src";
@@ -23,6 +23,7 @@ jest.mock("../../../src/helpers", () => {
 
 describe("roundResultConsumer", () => {
     const roundResultPublisher = stub<RoundResultPublisher>();
+    const provablyFairConsumer = stub<ProvablyFairConsumer>();
     const definition = {
         generateResult: jest.fn(),
     } as GameDefinition;
@@ -51,68 +52,14 @@ describe("roundResultConsumer", () => {
         gameData.drawId = drawId;
         gameData.roundId = roundId;
         gameData.pf = pf;
-        consumer = new RoundResultConsumer(gameData, definition, roundResultPublisher, resultsRepository);
+        consumer = new RoundResultConsumer(gameData, definition, roundResultPublisher, resultsRepository, provablyFairConsumer);
     });
 
     afterEach(() => {
         jest.clearAllMocks();
     });
 
-    describe("generateResult", () => {
-        beforeEach(() => {
-            consumer.generateFinalSeeds = jest.fn().mockReturnValueOnce(pf);
-        });
-
-        describe("when control this round result from admin", () => {
-            it("should set gameData.result", () => {
-                // Arrange
-                const expectResult = chance.floating();
-                consumer.gameData.settlementResultFromAdmin = { drawId: drawId, result: expectResult };
-
-                // Act
-                consumer.generateResult();
-
-                // Assert
-                expect(consumer.gameData.result).toBe(expectResult);
-            });
-        });
-
-        describe("when result is NOT controlled", () => {
-            const result = chance.floating();
-
-            beforeEach(() => {
-                consumer.gameData.settlementResultFromAdmin = null;
-                consumer.definition.generateResult.mockReturnValue(result);
-                consumer.getFinalSeeds = jest.fn().mockReturnValue(pf);
-            });
-
-            it("should call getFinalSeeds", async () => {
-                // Act
-                await consumer.generateResult();
-
-                // Assert
-                expect(consumer.getFinalSeeds).toHaveBeenCalledWith(drawId, pf);
-            });
-
-            it("should call definition.generateResult", async () => {
-                // Act
-                await consumer.generateResult();
-
-                // Assert
-                expect(definition.generateResult).toHaveBeenCalledWith({ finalHash: pf.finalHash, serverSeed: pf.serverSeed });
-            });
-
-            it("should set gameData.result", async () => {
-                // Act
-                await consumer.generateResult();
-
-                // Assert
-                expect(gameData.result).toBe(result);
-            });
-        });
-    });
-
-    describe("getFinalSeeds", () => {
+    describe("generateAndUpdatePfWithFinalSeeds", () => {
         describe("when this.definition.provablyFair = true ", () => {
             beforeEach(() => {
                 consumer.definition.provablyFair = true;
@@ -121,53 +68,19 @@ describe("roundResultConsumer", () => {
 
             it("should call generateFinalSeeds", async () => {
                 // Act
-                await consumer.getFinalSeeds(drawId, pf);
+                await consumer.generateAndUpdatePfWithFinalSeeds();
 
                 // Assert
-                expect(consumer.generateFinalSeeds).toHaveBeenCalledWith(pf);
+                expect(consumer.generateFinalSeeds).toHaveBeenCalled();
             });
 
             it("should update resultsRepository", async () => {
                 // Act
-                await consumer.getFinalSeeds(drawId, pf);
+                await consumer.generateAndUpdatePfWithFinalSeeds();
 
                 // Assert
                 expect(resultsRepository.findOneAndUpdate).toHaveBeenCalledWith({ drawId: drawId }, pf);
             });
-        });
-    });
-
-    describe("generateFinalSeeds", () => {
-        const result = chance.floating();
-        const finalSeeds = { clientSeeds: "clientSeeds", mergeClientSeed: "mergedClient", mergeSeed: "merged", finalHash: "aaaa" };
-
-        beforeEach(() => {
-            definition.generateResult.mockReturnValueOnce(result);
-            consumer.generateFinalSeeds = jest.fn().mockReturnValueOnce(finalSeeds);
-        });
-
-        it("should call generateFinalSeeds", async () => {
-            // Act
-            await consumer.getFinalSeeds(drawId, pf);
-
-            // Assert
-            expect(consumer.generateFinalSeeds).toHaveBeenCalledWith(pf);
-        });
-
-        it("should update resultsRepository", async () => {
-            // Act
-            await consumer.getFinalSeeds(drawId, pf);
-
-            // Assert
-            expect(resultsRepository.findOneAndUpdate).toHaveBeenCalledWith({ drawId: drawId }, finalSeeds);
-        });
-
-        it("should update mergeSeed in game data", async () => {
-            // Act
-            await consumer.getFinalSeeds(drawId, pf);
-
-            // Assert
-            expect(gameData.pf.mergeSeed).toBe(finalSeeds.mergeSeed);
         });
     });
 

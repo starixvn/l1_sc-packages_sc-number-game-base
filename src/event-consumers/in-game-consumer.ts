@@ -18,11 +18,12 @@ export default class InGameConsumer extends TableInGameConsumer {
         const players = realPlayer.session?.system === Systems.Mobi ? {} : this.buildPlayersPayload(realPlayer);
         const betPercentage = BetCountHelper.calculateBetPercentage(playerBetCount);
         const betCount = BetCountHelper.calculatePlayerBetCount(playerBetCount);
-
+        const oddsRange = this.getOddsRange(this.gameData.gameConfigs.margin);
         const payload = {
             roundId,
             roundData: this.getCurrentRoundData(),
             odds,
+            oddsRange,
             drawId,
             gameConfigs: configs,
             roundHistory,
@@ -41,6 +42,10 @@ export default class InGameConsumer extends TableInGameConsumer {
         return disabled && realPlayer.session?.system === Systems.Mini
             ? payload
             : { ...payload, remainingTime: this.gameData.remainingTime };
+    }
+
+    getOddsRange(margin?: Record<string, number>[]) {
+        return margin;
     }
 
     getCurrentRoundData() {
