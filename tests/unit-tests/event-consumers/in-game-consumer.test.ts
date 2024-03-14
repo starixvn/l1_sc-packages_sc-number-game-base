@@ -55,7 +55,11 @@ describe("InGameConsumer tests", () => {
             consumer.gameData.totalBets = totalBets;
             const players: any[] = [];
             consumer.buildPlayersPayload = jest.fn().mockReturnValue(players);
-            const gameConfigs = { odds: { choice1: 0, choice2: 0 }, enableFreeBet: false, enabled: true, margin: "0" };
+            const gameConfigs = {
+                odds: { choice1: 0, choice2: 0 },
+                enableFreeBet: false,
+                enabled: true,
+            };
             consumer.gameData.gameConfigs = gameConfigs as any;
             const currencyGroupGames = [{ groupId: "group", maxBet: { choice1: 2000, choice2: 2000 } }];
             consumer.gameData.currencyGroupGames = currencyGroupGames;
@@ -64,23 +68,25 @@ describe("InGameConsumer tests", () => {
             consumer.gameData.ingame = {};
             const realPlayer = { profile: { name: "player" }, session: { currencyCode: "USD", multiplier: 1, currencyGroupId: "group" } };
             consumer.gameData.remainingTime = 60;
+            const pf: any = { serverSeedHash: "123" };
+            consumer.gameData.pf = pf;
             consumer.getResultHash = jest.fn().mockReturnValue({});
             (BetCountHelper.calculateBetPercentage as jest.Mock).mockReturnValueOnce({ choice1: 100 });
             (BetCountHelper.calculatePlayerBetCount as jest.Mock).mockReturnValueOnce({ choice1: 1 });
-            consumer.getOddsRange = jest.fn().mockReturnValue({});
+            consumer.getOddsRange = jest.fn().mockReturnValue({ choice1: 0, choice2: 0 });
             const expected = {
                 roundId,
+                serverSeedHash: "123",
                 roundData: { drawId: 2 },
                 odds,
                 drawId: 2,
-                oddsRange: {},
                 gameConfigs: {
                     maxBet: { choice1: 2000, choice2: 2000 },
-                    margin: gameConfigs.margin,
                     enableFreeBet: gameConfigs.enableFreeBet,
                     boostedChoices: undefined,
                     groupId: "group",
                     originalOdds: undefined,
+                    oddsRange: { choice1: 0, choice2: 0 },
                 },
                 roundHistory,
                 ownBets: {},
