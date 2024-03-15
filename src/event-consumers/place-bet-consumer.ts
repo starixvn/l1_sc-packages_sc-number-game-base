@@ -10,6 +10,7 @@ type BetPayload = {
     betChoices: Record<string, number>;
     drawId: number;
     clientSeed: string;
+    clientSeedDetail: any;
     freeBet?: boolean;
     m?: string;
 };
@@ -146,6 +147,7 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
         if (!this.gameData.ingame[name]) {
             const newPlayer = {
                 name: player.profile.name,
+                clientSeedDetail: payload.clientSeedDetail,
                 currency: player.session.currencyName,
                 system: player.session.system,
                 betTracks: {},
