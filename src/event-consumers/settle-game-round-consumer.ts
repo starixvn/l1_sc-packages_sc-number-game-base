@@ -58,11 +58,8 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
                 isLastDraw: roundSettled.ended,
             };
             this.roundResultPublisher.publishRoundResult(finishDraw);
-
-            await this.settleBets(finishDraw);
-
             this.updateRoundData(finishDraw, roundSettled.result);
-
+            await this.settleBets(finishDraw);
             this.roundResultPublisher.publishWinners(roundId, this.gameData.winningPlayers, drawId);
         }
     }
