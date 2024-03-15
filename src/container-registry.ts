@@ -13,6 +13,7 @@ import { Bot, GameCron, ProcessBetQueue } from "./crons";
 import { RoundResultPublisher, RunningRoundInfoPublisher } from "./event-publishers";
 import { HistoryQuery, RoundQuery } from "./query-apis";
 import { PlaceBetPublisher } from "sc-game-base/src/core/event-publishers";
+import SocketRouter from "./routers/socket-router";
 
 export default class ContainerRegistry extends Table.TableContainerRegistry {
     registerApis() {
@@ -52,6 +53,13 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
             bot: asClass(Bot).singleton(),
             gameCron: asClass(GameCron).singleton().proxy(),
             processBetQueue: asClass(ProcessBetQueue).singleton().proxy(),
+        });
+    }
+
+    registerRouters() {
+        super.registerRouters();
+        this.container.register({
+            socketRouter: asClass(SocketRouter).proxy(),
         });
     }
 }
