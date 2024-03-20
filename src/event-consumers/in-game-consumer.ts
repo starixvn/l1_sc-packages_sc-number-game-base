@@ -16,7 +16,7 @@ export default class InGameConsumer extends TableInGameConsumer {
         const configs = this.getGameConfigs(session.currencyGroupId);
         const { ownBets } = this.gameData.ingame[realPlayer.profile.name] || { ownBets: {} };
         const players = realPlayer.session?.system === Systems.Mobi ? {} : this.buildPlayersPayload(realPlayer);
-        const betPercentage = BetCountHelper.calculateBetPercentage(playerBetCount);
+        const betPercentage = this.getBetPercentage(playerBetCount);
         const betCount = BetCountHelper.calculatePlayerBetCount(playerBetCount);
 
         const payload = {
@@ -40,6 +40,10 @@ export default class InGameConsumer extends TableInGameConsumer {
         return disabled && realPlayer.session?.system === Systems.Mini
             ? payload
             : { ...payload, remainingTime: this.gameData.remainingTime };
+    }
+
+    getBetPercentage(playerBetCount: Record<string, string[]>) {
+        return BetCountHelper.calculateBetPercentage(playerBetCount);
     }
 
     getOddsRange(margin?: Record<string, number>[]): any {
