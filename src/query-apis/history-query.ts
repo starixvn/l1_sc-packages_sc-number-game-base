@@ -1,19 +1,8 @@
 import { Core } from "sc-game-base";
 import RoundQuery from "./round-query";
-import mongoose from "mongoose";
 
 export default class HistoryQuery extends Core.QueryApis.HistoryQuery {
-    resultRepository: mongoose.Model<any>;
-
-    constructor(
-        roundQuery: RoundQuery,
-        betsRepository: mongoose.Model<any>,
-        betLogsRepository: mongoose.Model<any>,
-        resultsRepository: mongoose.Model<any>
-    ) {
-        super(roundQuery, betsRepository, betLogsRepository);
-        this.resultRepository = resultsRepository;
-    }
+    declare roundQuery: RoundQuery;
 
     async queryHistory(player: any, page: number, pageSize: number): Promise<any> {
         if (page < 1 || !player) {
@@ -47,7 +36,7 @@ export default class HistoryQuery extends Core.QueryApis.HistoryQuery {
                     const round = await this.roundQuery.getOne(currentDrawBet.roundId, { _id: false });
                     const result = round.result.find((e: any) => e.drawId === currentDrawBet.drawId);
                     const settlementResult = round.settlementResult.find((e: any) => e.drawId === currentDrawBet.drawId);
-                    const pfResult = await this.getPFResult(currentDrawBet.drawId);
+                    const pfResult = await this.roundQuery.getPfInfo(currentDrawBet.drawId, currentDrawBet.roundId);
 
                     return {
                         ...this.convertBet(currentDrawBet),
@@ -59,10 +48,7 @@ export default class HistoryQuery extends Core.QueryApis.HistoryQuery {
                         betwin: currentDrawBet.betwin,
                         time: currentDrawBet.time,
                         betLogDetails: betLogDetails,
-                        pfResult: {
-                            ...pfResult,
-                            roundResult: round.result,
-                        },
+                        pfResult: pfResult,
                         odds: currentDrawBet.odds,
                     };
                 })
@@ -70,15 +56,6 @@ export default class HistoryQuery extends Core.QueryApis.HistoryQuery {
         }
 
         return { history: { betLogs, page, pageSize, total } };
-    }
-
-    async getPFResult(drawId: number) {
-        const projection = {
-            _id: false,
-            __v: false,
-            __archive: false,
-        };
-        return this.resultRepository.findOne({ drawId }, projection).lean().exec();
     }
 
     getBetLogDetailsEachDraw(player: any, drawId: number) {

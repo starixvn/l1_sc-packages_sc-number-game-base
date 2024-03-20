@@ -68,15 +68,12 @@ describe("InGameConsumer tests", () => {
             consumer.gameData.ingame = {};
             const realPlayer = { profile: { name: "player" }, session: { currencyCode: "USD", multiplier: 1, currencyGroupId: "group" } };
             consumer.gameData.remainingTime = 60;
-            const pf: any = { serverSeedHash: "123" };
-            consumer.gameData.pf = pf;
             consumer.getResultHash = jest.fn().mockReturnValue({});
             (BetCountHelper.calculateBetPercentage as jest.Mock).mockReturnValueOnce({ choice1: 100 });
             (BetCountHelper.calculatePlayerBetCount as jest.Mock).mockReturnValueOnce({ choice1: 1 });
             consumer.getOddsRange = jest.fn().mockReturnValue({ choice1: 0, choice2: 0 });
             const expected = {
                 roundId,
-                serverSeedHash: "123",
                 roundData: { drawId: 2 },
                 odds,
                 drawId: 2,

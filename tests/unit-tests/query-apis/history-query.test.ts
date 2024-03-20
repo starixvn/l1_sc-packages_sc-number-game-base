@@ -1,5 +1,5 @@
-import { Model } from "mongoose";
-import { HistoryQuery } from "../../../src/query-apis";
+import { HistoryQuery, RoundQuery } from "../../../src/query-apis";
+import { CryptoHelper } from "sc-game-base/src/core/helpers";
 
 describe("RoundQuery tests", () => {
     describe("queryHistory", () => {
@@ -97,15 +97,24 @@ describe("RoundQuery tests", () => {
             const pfResult = [
                 {
                     drawId: 1,
+                    roundId: 1,
                     mergeClientSeed: "1",
+                    serverSeed: "serverSeed",
+                    serverSeedHash: "serverSeedHash",
                 },
                 {
                     drawId: 2,
+                    roundId: 1,
                     mergeClientSeed: "2",
+                    serverSeed: "serverSeed",
+                    serverSeedHash: "serverSeedHash",
                 },
                 {
                     drawId: 3,
+                    roundId: 1,
                     mergeClientSeed: "3",
+                    serverSeed: "serverSeed",
+                    serverSeedHash: "serverSeedHash",
                 },
             ];
 
@@ -113,10 +122,6 @@ describe("RoundQuery tests", () => {
             const betRepository: any = {
                 find: jest.fn().mockReturnValue({ lean: jest.fn().mockReturnValue({ exec: execute }) }),
                 countDocuments: jest.fn().mockReturnValue({ exec: () => Promise.resolve(betLogs.length) }),
-            };
-
-            const roundQuery: any = {
-                getOne: async (roundId: number) => rounds.find((round) => round.id === roundId),
             };
 
             const betLogsRepository: any = {
@@ -138,6 +143,12 @@ describe("RoundQuery tests", () => {
                     };
                 },
             };
+
+            CryptoHelper.decrypt = jest.fn().mockReturnValue("serverSeed");
+
+            const roundQuery = new RoundQuery(null, pfResultRepository);
+
+            roundQuery.getOne = async (roundId: number) => rounds.find((round) => round.id === roundId);
 
             const expected = {
                 history: {
@@ -167,8 +178,11 @@ describe("RoundQuery tests", () => {
                                 },
                             ],
                             pfResult: {
+                                roundId: 1,
                                 drawId: 1,
                                 mergeClientSeed: "1",
+                                serverSeed: "serverSeed",
+                                serverSeedHash: "serverSeedHash",
                                 roundResult: [
                                     { drawId: 1, player: 34, banker: 12 },
                                     { drawId: 2, player: 33, banker: 22 },
@@ -205,7 +219,10 @@ describe("RoundQuery tests", () => {
                             ],
                             pfResult: {
                                 drawId: 2,
+                                roundId: 1,
                                 mergeClientSeed: "2",
+                                serverSeed: "serverSeed",
+                                serverSeedHash: "serverSeedHash",
                                 roundResult: [
                                     { drawId: 1, player: 34, banker: 12 },
                                     { drawId: 2, player: 33, banker: 22 },
@@ -240,7 +257,14 @@ describe("RoundQuery tests", () => {
                                     choice: "tie",
                                 },
                             ],
-                            pfResult: { drawId: 3, mergeClientSeed: "3", roundResult: [{ drawId: 3, player: 39, banker: 22 }] },
+                            pfResult: {
+                                roundId: 1,
+                                drawId: 3,
+                                mergeClientSeed: "3",
+                                serverSeed: "serverSeed",
+                                serverSeedHash: "serverSeedHash",
+                                roundResult: [{ drawId: 3, player: 39, banker: 22 }],
+                            },
                             odds: {
                                 player: 1.5,
                                 banker: 1.5,
@@ -253,7 +277,7 @@ describe("RoundQuery tests", () => {
                 },
             };
 
-            const historyQuery = new HistoryQuery(roundQuery, betRepository, betLogsRepository, pfResultRepository);
+            const historyQuery = new HistoryQuery(roundQuery, betRepository, betLogsRepository);
 
             // act
             const actual = await historyQuery.queryHistory("player", 1, 3);

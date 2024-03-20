@@ -23,7 +23,7 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
         const drawResult = this.gameData.result;
         const drawSettlementResult = this.definition.settle(drawResult);
         const { roundId, drawId, exchangeRates } = this.gameData;
-        Object.assign(drawResult, { drawId: drawId });
+        Object.assign(drawResult, { drawId: drawId, time: new Date() });
         Object.assign(drawSettlementResult, { drawId: drawId });
 
         if (this.isFirstDrawOfRound(drawId)) {
@@ -54,7 +54,7 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
                 settlementResult: drawSettlementResult,
                 roundId: roundSettled.id,
                 drawId: roundSettled.drawId,
-                time: new Date(),
+                time: drawResult.time,
                 isLastDraw: roundSettled.ended,
             };
             this.roundResultPublisher.publishRoundResult(finishDraw);

@@ -68,7 +68,7 @@ describe("RoundQuery tests", () => {
             ];
             const execute = jest.fn().mockReturnValue(rounds);
             const roundsRepository = { find: jest.fn().mockReturnValue({ lean: jest.fn().mockReturnValue({ exec: execute }) }) };
-            const roundQuery = new RoundQuery(roundsRepository);
+            const roundQuery = new RoundQuery(roundsRepository, null);
             const numberOfRoundHistory = 10;
             const numberOfTurnsPerRound = 4;
             const expected = [
