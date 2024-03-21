@@ -4,6 +4,18 @@ import { stub } from "jest-auto-stub";
 import GameDefinition from "../../../src/game-definition";
 import GameData from "../../../src/game-data";
 
+jest.mock("sc-common", () => ({
+    helpers: {
+        noticeHelper: {
+            invalidBet: "invalidBet",
+            cannotPlaceBet: "cannotPlaceBet",
+            minBet: "minBet",
+            maxBet: "maxBet",
+            disallowHedgeBet: "disallowHedgeBet",
+        },
+    },
+}));
+
 describe("PlaceBetConsumer test", () => {
     let consumer: PlaceBetConsumer;
     const definition = stub<GameDefinition>();
@@ -37,6 +49,7 @@ describe("PlaceBetConsumer test", () => {
 
             // assert
             expect(actual.failure).toBe(true);
+            expect(actual.notice).toBe("invalidBet");
         });
 
         describe("when game show results", () => {
@@ -60,6 +73,7 @@ describe("PlaceBetConsumer test", () => {
 
                 // assert
                 expect(actual.failure).toBe(true);
+                expect(actual.notice).toBe("cannotPlaceBet");
             });
         });
 
@@ -84,6 +98,7 @@ describe("PlaceBetConsumer test", () => {
 
                 // assert
                 expect(actual.failure).toBe(true);
+                expect(actual.notice).toBe("SB1941");
             });
         });
 
@@ -115,7 +130,7 @@ describe("PlaceBetConsumer test", () => {
     describe("composeBetAmountValidationCriteria", () => {
         const player = { profile: { name: "user", minBet: 10, maxBet: 50 }, session: { currencyGroupId: "A" } };
         beforeEach(() => {
-            consumer.getNoticeObj = jest.fn().mockReturnValue("");
+            consumer.getNoticeObj = jest.fn((key) => key);
             consumer.anyChoiceExceedItsMaxBet = jest.fn().mockReturnValue(false);
             consumer.anyChoiceBelowMinBet = jest.fn().mockReturnValue(false);
             consumer.anyChoiceExceedItsMaxWin = jest.fn().mockReturnValue(false);
@@ -131,6 +146,7 @@ describe("PlaceBetConsumer test", () => {
 
             // assert
             expect(actual.failure).toBe(true);
+            expect(actual.notice).toBe("invalidBet");
         });
 
         it("should return failure when totalAmountOfExistingBets + totalAmount < minBet", () => {
@@ -143,6 +159,7 @@ describe("PlaceBetConsumer test", () => {
 
             // assert
             expect(actual.failure).toBe(true);
+            expect(actual.notice).toBe("minBet");
         });
 
         it("should return failure when totalAmount > maxBet", () => {
@@ -151,6 +168,7 @@ describe("PlaceBetConsumer test", () => {
 
             // assert
             expect(actual.failure).toBe(true);
+            expect(actual.notice).toBe("maxBet");
         });
 
         it("should return failure when totalAmountOfExistingBets + totalAmount > maxBet", () => {
@@ -162,6 +180,7 @@ describe("PlaceBetConsumer test", () => {
 
             // assert
             expect(actual.failure).toBe(true);
+            expect(actual.notice).toBe("maxBet");
         });
 
         it("should return false when valid bets", () => {

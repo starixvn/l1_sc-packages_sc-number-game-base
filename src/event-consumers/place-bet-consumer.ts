@@ -46,7 +46,7 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
             },
             {
                 failure: time < lockingBet || time > showingResultTime,
-                notice: this.getNoticeObj(helpers.noticeHelper.placeBetNextRound),
+                notice: this.getNoticeObj(notices.placeBetNextDraw),
             },
         ];
     }
