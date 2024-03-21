@@ -78,11 +78,11 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
             },
             {
                 failure: totalAmount > maxBet,
-                notice: this.getNoticeObj(helpers.noticeHelper.maxBet, { maxBet }),
+                notice: this.getNoticeObj(notices.maxBetOnDraw, { maxBet }),
             },
             {
                 failure: totalAmountOfExistingBets + totalAmount > maxBet,
-                notice: this.getNoticeObj(helpers.noticeHelper.maxBet, { maxBet }),
+                notice: this.getNoticeObj(notices.maxBetOnDraw, { maxBet }),
             },
             {
                 failure: this.anyChoiceExceedItsMaxWin(betChoices, betTracks, configs, maxBet),

@@ -4,4 +4,5 @@ export default {
     invalidBetChoice: "SB1926",
     maxWinOfAnyChoiceReached: "SB1940",
     placeBetNextDraw: "SB1941",
+    maxBetOnDraw: "SB1942",
 };

@@ -10,7 +10,6 @@ jest.mock("sc-common", () => ({
             invalidBet: "invalidBet",
             cannotPlaceBet: "cannotPlaceBet",
             minBet: "minBet",
-            maxBet: "maxBet",
             disallowHedgeBet: "disallowHedgeBet",
         },
     },
@@ -168,7 +167,7 @@ describe("PlaceBetConsumer test", () => {
 
             // assert
             expect(actual.failure).toBe(true);
-            expect(actual.notice).toBe("maxBet");
+            expect(actual.notice).toBe("SB1942");
         });
 
         it("should return failure when totalAmountOfExistingBets + totalAmount > maxBet", () => {
@@ -180,7 +179,7 @@ describe("PlaceBetConsumer test", () => {
 
             // assert
             expect(actual.failure).toBe(true);
-            expect(actual.notice).toBe("maxBet");
+            expect(actual.notice).toBe("SB1942");
         });
 
         it("should return false when valid bets", () => {
