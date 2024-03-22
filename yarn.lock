@@ -2749,6 +2749,16 @@
   resolved "http://npm.lumigame.com/@types/range-parser/-/range-parser-1.2.7.tgz#50ae4353eaaddc04044279812f52c8c65857dbcb"
   integrity sha512-hKormJbkJqzQGhziax5PItDUTMAM9uE2XXQmM37dyd4hVM+5aVl7oVxMVUiVQn2oCQFN/LKCZdvSM0pFRqbSmQ==
 
+"@types/sc-common@^1.0.0-beta.0":
+  version "1.0.0-beta.0"
+  resolved "http://npm.lumigame.com/@types/sc-common/-/sc-common-1.0.0-beta.0.tgz#494a143c7a1373d59f1677f8d4375b8c478059aa"
+  integrity sha512-Ql33qm27bpXj5lTXAmEZYA5AcLm+xEKD3oRQh++MFsfUVwqA5B1C9hjNl9jncwpBC6wzLC+Zv0ARysctltR+vw==
+
+"@types/sc-game-base@^1.0.0-beta.0":
+  version "1.0.0-beta.0"
+  resolved "http://npm.lumigame.com/@types/sc-game-base/-/sc-game-base-1.0.0-beta.0.tgz#00b1173f427dd76b7f9ee4303342d4a765a28b4b"
+  integrity sha512-E4qIVTnW9C7ZAXPaYnPtPRlE7D9HAtdyf/CU9dT8YJYtK+9GZRgRiUMgNZdmFeDlS9yCTRiNNlcHRcVlQJe08A==
+
 "@types/send@*":
   version "0.17.4"
   resolved "http://npm.lumigame.com/@types/send/-/send-0.17.4.tgz#6619cd24e7270793702e4e6a4b958a9010cfc57a"
