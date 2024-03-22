@@ -7,6 +7,7 @@ import { SettleGameRoundConsumer } from "../../../src/event-consumers";
 import { stub } from "jest-auto-stub";
 import GameManagementApiClientFactory from "sc-game-base/src/core/game-management-api";
 import Chance from "chance";
+import { FinishDraw } from "../../../src/event-consumers/settle-game-round-consumer";
 
 describe("SettleGameRoundConsumer test", () => {
     const chance = new Chance();
@@ -207,5 +208,108 @@ describe("SettleGameRoundConsumer test", () => {
                     });
                 });
             });
+    });
+
+    describe("isFirstDrawOfRound", () => {
+        beforeEach(() => {
+            consumer.definition.numberOfTurnsPerRound = 4;
+        });
+
+        describe("when draw is the first draw", () => {
+            const testCases = [{ drawId: 1 }, { drawId: 5 }, { drawId: 9 }, { drawId: 13 }, { drawId: 17 }];
+            it.each(testCases)("should return correct", ({ drawId }) => {
+                // Act
+                const result = consumer.isFirstDrawOfRound(drawId);
+
+                // Assert
+                expect(result).toBe(true);
+            });
+        });
+
+        describe("when draw is not the first draw", () => {
+            const testCases = [{ drawId: 2 }, { drawId: 3 }, { drawId: 8 }, { drawId: 11 }, { drawId: 15 }];
+            it.each(testCases)("should return correct", ({ drawId }) => {
+                // Act
+                const result = consumer.isFirstDrawOfRound(drawId);
+
+                // Assert
+                expect(result).toBe(false);
+            });
+        });
+    });
+
+    describe("isLastDrawOfRound", () => {
+        beforeEach(() => {
+            consumer.definition.numberOfTurnsPerRound = 4;
+        });
+
+        describe("when draw is the last draw", () => {
+            const testCases = [{ drawId: 4 }, { drawId: 8 }, { drawId: 12 }, { drawId: 16 }, { drawId: 20 }];
+            it.each(testCases)("should return correct", ({ drawId }) => {
+                // Act
+                const result = consumer.isLastDrawOfRound(drawId);
+
+                // Assert
+                expect(result).toBe(true);
+            });
+        });
+
+        describe("when draw is not the first draw", () => {
+            const testCases = [{ drawId: 2 }, { drawId: 3 }, { drawId: 7 }, { drawId: 11 }, { drawId: 15 }];
+            it.each(testCases)("should return correct", ({ drawId }) => {
+                // Act
+                const result = consumer.isLastDrawOfRound(drawId);
+
+                // Assert
+                expect(result).toBe(false);
+            });
+        });
+    });
+
+    describe("updateRoundData", () => {
+        beforeEach(() => {
+            consumer.gameData.drawId = 8;
+            consumer.gameData.roundId = 2;
+        });
+        const finishDraw = {
+            roundId: 2,
+            drawId: 8,
+            isLastDraw: true,
+        };
+
+        const roundResult = [
+            {
+                player: 1,
+                banker: 3,
+                drawId: 5,
+            },
+        ];
+        describe("when draw is the last draw", () => {
+            it("should update correct", () => {
+                // Arrange
+                consumer.isLastDrawOfRound = jest.fn(() => true);
+
+                // Act
+                consumer.updateRoundData(finishDraw as FinishDraw, roundResult);
+
+                // Assert
+                expect(consumer.gameData.drawId).toBe(9);
+                expect(consumer.gameData.roundId).toBe(3);
+            });
+        });
+
+        describe("when draw is NOT the last draw", () => {
+            it("should update correct", () => {
+                // Arrange
+                consumer.isLastDrawOfRound = jest.fn(() => false);
+
+                // Act
+                consumer.updateRoundData(finishDraw as FinishDraw, roundResult);
+
+                // Assert
+                expect(consumer.gameData.drawId).toBe(9);
+                expect(consumer.gameData.roundId).toBe(2);
+            });
+        });
     });
 });

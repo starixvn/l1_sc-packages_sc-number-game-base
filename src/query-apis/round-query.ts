@@ -23,7 +23,7 @@ export default class RoundQuery extends Core.QueryApis.RoundQuery {
     async getPfInfo(drawId: number, roundId: number) {
         const round = await this.getOne(roundId, { _id: false });
 
-        const drawResult = round.result.find((r: any) => r.drawId === drawId);
+        const drawResult = round?.result.find((r: any) => r.drawId === drawId);
 
         const pfResult = await this.getPFResult(drawId);
 
