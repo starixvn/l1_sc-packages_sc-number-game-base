@@ -5,8 +5,9 @@ export default class HttpRouter extends TableHttpRouter {
     declare gameData: GameData;
     collectOnlineUsers() {
         const onlineUsers = super.collectOnlineUsers();
-        const realPlayers = onlineUsers.realUsers?.filter((user) => this.gameData.players[user.id]);
-        const testPlayers = onlineUsers.testUsers?.filter((user) => this.gameData.players[user.id]);
+        const playerNamesInGame = Object.values(this.gameData.players)?.map((player: any) => player.name);
+        const realPlayers = onlineUsers.realUsers?.filter((user) => playerNamesInGame.includes(user.name));
+        const testPlayers = onlineUsers.testUsers?.filter((user) => playerNamesInGame.includes(user.name));
 
         return {
             ...onlineUsers,
