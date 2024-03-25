@@ -6,7 +6,9 @@ export default class HttpRouter extends TableHttpRouter {
     collectOnlineUsers() {
         const onlineUsers = super.collectOnlineUsers();
         const realPlayers = onlineUsers.realUsers?.filter((user) => this.gameData.players[user.UID]);
+        realPlayers.forEach((user) => delete user.UID);
         const testPlayers = onlineUsers.testUsers?.filter((user) => this.gameData.players[user.UID]);
+        testPlayers.forEach((user) => delete user.UID);
 
         return {
             ...onlineUsers,
