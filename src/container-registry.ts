@@ -10,7 +10,7 @@ import {
     UnsettledRoundConsumer,
 } from "./event-consumers";
 import { Bot, GameCron, ProcessBetQueue } from "./crons";
-import { RoundResultPublisher, RunningRoundInfoPublisher } from "./event-publishers";
+import { GameStatusPublisher, RoundResultPublisher, RunningRoundInfoPublisher } from "./event-publishers";
 import { HistoryQuery, RoundQuery } from "./query-apis";
 import { PlaceBetPublisher } from "sc-game-base/src/core/event-publishers";
 import { HttpRouter, SocketRouter } from "./routers";
@@ -44,6 +44,7 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
             placeBetPublisher: asClass(PlaceBetPublisher).singleton(),
             roundResultPublisher: asClass(RoundResultPublisher).singleton(),
             runningRoundInfoPublisher: asClass(RunningRoundInfoPublisher).singleton(),
+            gameStatusPublisher: asClass(GameStatusPublisher).singleton(),
         });
     }
 
