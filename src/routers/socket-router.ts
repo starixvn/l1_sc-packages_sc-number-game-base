@@ -21,7 +21,7 @@ export default class SocketRouter extends BaseSocketRouter {
             if (!this.verify() || this.gameData.disabled) {
                 return;
             }
-            const roundHistory = await (this.roundQuery as RoundQuery).getList(
+            const roundHistory = await this.roundQuery.getList(
                 this.definition.numberOfRoundHistory,
                 {},
                 this.definition.numberOfTurnsPerRound

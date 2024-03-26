@@ -9162,7 +9162,7 @@ socket.io-parser@~4.2.1, socket.io-parser@~4.2.4:
     "@socket.io/component-emitter" "~3.1.0"
     debug "~4.3.1"
 
-socket.io-prom-metrics@1.0.3, socket.io-prom-metrics@^1.0.3:
+socket.io-prom-metrics@^1.0.3:
   version "1.0.3"
   resolved "http://npm.lumigame.com/socket.io-prom-metrics/-/socket.io-prom-metrics-1.0.3.tgz#c4865d821814a19a254f02caca3ac55fae58d907"
   integrity sha512-a4WU+9kGIuWK8oSlAQCV6TJhAh03ssLollbi3hZ7kleuGaGrpnGL9EjTk64PikOlEFV6rhXObSTsQhvR7t70Mw==
