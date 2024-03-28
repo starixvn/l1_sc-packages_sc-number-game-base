@@ -6,5 +6,6 @@ import GameData from "./game-data";
 import GameDefinition from "./game-definition";
 import * as Helpers from "./helpers";
 import * as Models from "./models";
+import * as Routers from "./routers";
 
-export { Crons, EventConsumers, ContainerRegistry, GameData, GameDefinition, EventPublishers, Helpers, Models };
+export { Crons, EventConsumers, ContainerRegistry, GameData, GameDefinition, EventPublishers, Helpers, Models, Routers };
