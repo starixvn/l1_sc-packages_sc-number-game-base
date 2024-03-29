@@ -7,7 +7,6 @@ export default class UnsettledRoundConsumer extends BaseEventConsumers.Unsettled
 
     async proceed() {
         if (this.gameData.lastResultRecord) {
-            await this.loadGameConfigs();
             await this.generateResult();
 
             await this.settleGameRoundConsumer.settleRound();

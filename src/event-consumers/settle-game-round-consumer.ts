@@ -79,16 +79,13 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
         const bets = await this.queryBets(finishDraw.drawId);
 
         if (bets?.length) {
-            const odds = this.gameData.odds;
-
             await Promise.all(
                 bets.map(async (bet: any) => {
                     const settlementDrawResult = getFilterObjectWithAllowedKeys(finishDraw.settlementResult, this.definition.choices);
 
-                    const betResult = this.calculateBetResult(settlementDrawResult, bet, odds);
+                    const betResult = this.calculateBetResult(settlementDrawResult, bet, bet.odds);
 
                     bet.betwin = betResult.totalWin;
-                    bet.odds = odds;
                     bet.paid = true;
 
                     await bet.save();
