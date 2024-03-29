@@ -90,6 +90,7 @@ describe("SettleGameRoundConsumer test", () => {
                 save: jest.fn(),
                 drawId: 3,
                 rate: chance.natural(),
+                odds: { player: 1.96, banker: 1.96, tie: 10 },
             },
             {
                 uid: chance.guid(),
@@ -99,6 +100,7 @@ describe("SettleGameRoundConsumer test", () => {
                 save: jest.fn(),
                 drawId: 2,
                 rate: chance.natural(),
+                odds: { player: 1.9, banker: 1.9, tie: 15 },
             },
             {
                 uid: chance.guid(),
@@ -108,6 +110,7 @@ describe("SettleGameRoundConsumer test", () => {
                 save: jest.fn(),
                 drawId: 1,
                 rate: chance.natural(),
+                odds: { player: 1.86, banker: 1.86, tie: 20 },
             },
         ];
 
@@ -141,7 +144,6 @@ describe("SettleGameRoundConsumer test", () => {
             jest.spyOn(consumer, "queryBets").mockImplementation(async () => queryBets);
             consumer.calculateBetResult = jest.fn(() => betResult);
             consumer.captureBetResult = jest.fn();
-            gameData.odds = { player: 1.96, banker: 1.96, tie: 10 };
         });
 
         it("should call queryBets with drawId", async () => {
@@ -168,7 +170,7 @@ describe("SettleGameRoundConsumer test", () => {
                             betIndex + 1,
                             settlementDrawResult,
                             queryBets[betIndex],
-                            gameData.odds
+                            queryBets[betIndex].odds
                         );
                     });
 
