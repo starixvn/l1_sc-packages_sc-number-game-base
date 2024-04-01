@@ -430,11 +430,13 @@ describe("Bot tests", () => {
             const update = { [choice]: amount + currentAmount };
             bot.gameData.drawId = 2;
             bot.gameData.roundId = 1;
+            bot.gameData.odds = { player: 2, banker: 2, tie: 30 };
             const create = {
                 uid: botInfo.id,
                 name: botInfo.name,
                 drawId: bot.gameData.drawId,
                 roundId: bot.gameData.roundId,
+                odds: { player: 2, banker: 2, tie: 30 },
                 time: new Date(123456),
                 currency: " ",
                 operatorId: " ",
