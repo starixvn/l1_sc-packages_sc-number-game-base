@@ -206,6 +206,7 @@ export default class Bot extends Table.Crons.TableGameBot {
             name: bot.name,
             drawId: this.gameData.drawId,
             roundId: this.gameData.roundId,
+            odds: this.gameData.odds,
             time: new Date(),
             currency: " ",
             operatorId: " ",
