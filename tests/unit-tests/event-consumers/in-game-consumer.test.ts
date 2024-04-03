@@ -87,6 +87,7 @@ describe("InGameConsumer tests", () => {
                 },
                 roundHistory,
                 ownBets: {},
+                clientSeedDetail: {},
                 totalBets,
                 user: { ...player, rate: 1 },
                 resultHash: {},

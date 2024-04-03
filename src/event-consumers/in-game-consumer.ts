@@ -14,7 +14,7 @@ export default class InGameConsumer extends TableInGameConsumer {
         const { session } = realPlayer;
         const rate = exchangeRates.code[session.currencyCode] * session.multiplier;
         const configs = this.getGameConfigs(session.currencyGroupId);
-        const { ownBets } = this.gameData.ingame[realPlayer.profile.name] || { ownBets: {} };
+        const { ownBets, clientSeedDetail } = this.gameData.ingame[realPlayer.profile.name] || { ownBets: {}, clientSeedDetail: {} };
         const players = realPlayer.session?.system === Systems.Mobi ? {} : this.buildPlayersPayload(realPlayer);
         const betPercentage = this.getBetPercentage(playerBetCount);
         const betCount = BetCountHelper.calculatePlayerBetCount(playerBetCount);
@@ -33,6 +33,7 @@ export default class InGameConsumer extends TableInGameConsumer {
             players,
             betPercentage,
             playerBetCount: betCount,
+            clientSeedDetail,
         };
 
         const disabled = !gameConfigs?.enabled;
