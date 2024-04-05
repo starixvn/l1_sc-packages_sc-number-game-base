@@ -46,10 +46,14 @@ export default class RoundQuery extends Core.QueryApis.RoundQuery {
 
         const result = await this.resultsRepository.findOne({ drawId }, projection).lean().exec();
 
-        const { encryptedServerSeed } = result;
+        if (result) {
+            const { encryptedServerSeed } = result;
 
-        const serverSeed = CryptoHelper.decrypt(encryptedServerSeed);
+            const serverSeed = CryptoHelper.decrypt(encryptedServerSeed);
 
-        return { ...result, serverSeed };
+            return { ...result, serverSeed };
+        }
+
+        return null;
     }
 }
