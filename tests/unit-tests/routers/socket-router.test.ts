@@ -3,8 +3,10 @@ import { GameData, GameDefinition } from "../../../src";
 import { RoundQuery } from "../../../src/query-apis";
 import SocketRouter from "../../../src/routers/socket-router";
 import { BaseSocketRouter } from "sc-game-base/src/core/routers";
+import { Chance } from "chance";
 
 describe("SocketRounter tests", () => {
+    const chance = new Chance();
     const gameData = stub<GameData>();
     const definition = stub<GameDefinition>();
     const roundQuery = stub<RoundQuery>();
@@ -12,6 +14,10 @@ describe("SocketRounter tests", () => {
     beforeEach(() => {
         //@ts-ignore
         router = new SocketRouter({ gameData, definition, roundQuery });
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
     });
 
     describe("init", () => {
@@ -96,6 +102,155 @@ describe("SocketRounter tests", () => {
 
                 // assert
                 expect(router.logService.logError).toHaveBeenCalledWith(error);
+            });
+        });
+    });
+
+    describe("getPfInfo", () => {
+        const payload = {
+            roundId: 1,
+            drawId: 1,
+        };
+
+        const clientId = chance.natural();
+
+        beforeEach(() => {
+            gameData.roundId = 1;
+            gameData.drawId = 1;
+            payload.drawId = 1;
+            payload.roundId = 1;
+            router.socketClient = { emit: jest.fn(), id: clientId } as any;
+            gameData.realPlayers[clientId] = {
+                profile: {
+                    name: "player1",
+                },
+            };
+            gameData.ingame["player1"] = {
+                clientSeedDetail: {
+                    clientSeed: "1234",
+                    useManual: true,
+                },
+            };
+        });
+
+        describe("when not having provably fair", () => {
+            it("should not return anything", async () => {
+                // arrange
+                definition.provablyFair = false;
+                router.verify = jest.fn().mockReturnValue(true);
+
+                // act
+                await router.getPfInfo(payload);
+
+                // assert
+                expect(router.socketClient.emit).not.toHaveBeenCalled();
+            });
+        });
+
+        describe("when unauthenticated", () => {
+            it("should not return anything", async () => {
+                // arrange
+                router.verify = jest.fn().mockReturnValue(false);
+
+                // act
+                await router.getPfInfo(payload);
+
+                // assert
+                expect(router.socketClient.emit).not.toHaveBeenCalled();
+            });
+        });
+
+        describe("when there is an error", () => {
+            it("should log error", async () => {
+                // arrange
+                const error = new Error("error");
+                router.verify = jest.fn().mockImplementation(() => {
+                    throw error;
+                });
+                router.logService = { logError: jest.fn() };
+
+                // act
+                await router.getLobbyData();
+
+                // assert
+                expect(router.logService.logError).toHaveBeenCalledWith(error);
+            });
+        });
+
+        describe("when payload.roundId > gameData.roundId", () => {
+            it("should not return anything", async () => {
+                // arrange
+                definition.provablyFair = true;
+                router.verify = jest.fn().mockReturnValue(true);
+                payload.roundId = 2;
+                gameData.roundId = 1;
+
+                // act
+                await router.getPfInfo(payload);
+
+                // assert
+                expect(router.socketClient.emit).not.toHaveBeenCalled();
+            });
+        });
+
+        describe("when payload.drawId > gameData.drawId", () => {
+            it("should not return anything", async () => {
+                // arrange
+                definition.provablyFair = true;
+                router.verify = jest.fn().mockReturnValue(true);
+                payload.drawId = 2;
+                gameData.drawId = 1;
+
+                // act
+                await router.getPfInfo(payload);
+
+                // assert
+                expect(router.socketClient.emit).not.toHaveBeenCalled();
+            });
+        });
+
+        describe("when all conditions are valid", () => {
+            it("should call roundQuery.getPfInfo", async () => {
+                // arrange
+                definition.provablyFair = true;
+                router.verify = jest.fn().mockReturnValue(true);
+
+                // act
+                await router.getPfInfo(payload);
+
+                // assert
+                expect(roundQuery.getPfInfo).toHaveBeenCalledWith(payload.drawId, payload.roundId);
+            });
+
+            it("should emit correct data", async () => {
+                // arrange
+                const pfResult = {
+                    roundId: chance.natural(),
+                    drawId: chance.natural(),
+                    serverSeedHash: "serverSeedHash",
+                    encryptedServerSeed: {},
+                    finalHash: "finalHash",
+                    clientSeeds: ["1", "2", "3", "4"],
+                };
+
+                definition.provablyFair = true;
+                definition.name = "numberGame";
+                router.verify = jest.fn().mockReturnValue(true);
+                roundQuery.getPfInfo = jest.fn().mockReturnValue(pfResult);
+
+                const pfInfo = {
+                    pfResult: pfResult,
+                    clientSeedDetail: {
+                        clientSeed: "1234",
+                        useManual: true,
+                    },
+                };
+
+                // act
+                await router.getPfInfo(payload);
+
+                // assert
+                expect(router.socketClient.emit).toHaveBeenCalledWith("numberGame", pfInfo);
             });
         });
     });

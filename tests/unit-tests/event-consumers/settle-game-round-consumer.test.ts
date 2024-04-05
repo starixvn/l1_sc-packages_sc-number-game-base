@@ -1,4 +1,3 @@
-import { jest } from "@jest/globals";
 import { Table, Core } from "sc-game-base";
 import GameDefinition from "../../../src/game-definition";
 import GameData from "../../../src/game-data";
@@ -17,7 +16,7 @@ describe("SettleGameRoundConsumer test", () => {
     const roundResultPublisher = stub<RoundResultPublisher>();
     const userBetResultPublisher = stub<Core.BaseEventPublishers.UserBetResultPublisher>();
     const endGame = jest.fn();
-    const roundsRepository = { find: (): any => {}, create: (): any => {} };
+    const roundsRepository = { find: (): any => {}, create: (): any => {}, findOneAndUpdate: (): any => {} };
     const betsRepository = { find: (): any => {} };
     const tempBetsRepository = { find: (): any => {} };
     const gameManagementApiClientFactory = new GameManagementApiClientFactory({});
@@ -38,6 +37,154 @@ describe("SettleGameRoundConsumer test", () => {
 
     it("Inherit Table.EventConsumers.TableSettleGameRoundConsumer", () => {
         expect(consumer instanceof Table.EventConsumers.TableSettleGameRoundConsumer).toBeTruthy();
+    });
+
+    describe("settleRound", () => {
+        const drawResult = { player: 10, banker: 2 };
+        const drawSettlementResult = { player: true, banker: false, tie: false };
+        const mockDate = new Date();
+        const roundId = chance.natural();
+        const drawId = chance.natural();
+        const createResult = {
+            id: roundId,
+            drawId: drawId,
+            result: [drawResult],
+            settlementResult: [drawSettlementResult],
+            time: mockDate,
+            exchangeRateId: 1,
+            ended: false,
+        };
+        const winningPlayers = { user: "player1" };
+
+        beforeEach(() => {
+            gameData.roundId = roundId;
+            gameData.drawId = drawId;
+            gameData.result = drawResult;
+            gameData.exchangeRates = { exId: 1 };
+            definition.settle.mockReturnValue(drawSettlementResult);
+            consumer.settleBets = jest.fn();
+            jest.spyOn(global, "Date").mockImplementation(() => mockDate);
+            roundsRepository.create = jest.fn().mockReturnValue(createResult);
+            roundsRepository.findOneAndUpdate = jest.fn().mockReturnValue(createResult);
+            roundResultPublisher.publishRoundResult = jest.fn();
+            consumer.updateRoundData = jest.fn();
+            consumer.settleBets = jest.fn();
+            roundResultPublisher.publishWinners = jest.fn();
+            gameData.winningPlayers = winningPlayers;
+        });
+
+        it("should call settle with drawResult", async () => {
+            // Act
+            await consumer.settleRound();
+
+            // Assert
+            expect(definition.settle).toHaveBeenCalledWith(drawResult);
+        });
+
+        describe("when isFirstDrawOfRound", () => {
+            it("should call roundsRepository.create", async () => {
+                // Arrange
+                consumer.isFirstDrawOfRound = jest.fn(() => true);
+
+                // Act
+                await consumer.settleRound();
+
+                // Assert
+                expect(roundsRepository.create).toHaveBeenCalledWith(createResult);
+            });
+        });
+
+        describe("when isLastDrawOfRound", () => {
+            it("should call roundsRepository.findOneAndUpdate", async () => {
+                // Arrange
+                consumer.isFirstDrawOfRound = jest.fn(() => false);
+                consumer.isLastDrawOfRound = jest.fn(() => true);
+                const filter = { id: roundId };
+                const update = {
+                    $push: { result: drawResult, settlementResult: drawSettlementResult },
+                    $set: { drawId: drawId, ended: true },
+                };
+                const opts = { new: true };
+
+                // Act
+                await consumer.settleRound();
+
+                // Assert
+                expect(roundsRepository.findOneAndUpdate).toHaveBeenCalledWith(filter, update, opts);
+            });
+        });
+
+        it("should call roundResultPublisher.publishRoundResult", async () => {
+            //Arrange
+            const finishDraw: FinishDraw = {
+                result: drawResult,
+                settlementResult: drawSettlementResult,
+                roundId: roundId,
+                drawId: drawId,
+                time: mockDate,
+                isLastDraw: false,
+            };
+
+            // Act
+            await consumer.settleRound();
+
+            // Assert
+            expect(roundResultPublisher.publishRoundResult).toHaveBeenCalledWith(finishDraw);
+        });
+
+        it("should call updateRoundData", async () => {
+            //Arrange
+            const finishDraw: FinishDraw = {
+                result: drawResult,
+                settlementResult: drawSettlementResult,
+                roundId: roundId,
+                drawId: drawId,
+                time: mockDate,
+                isLastDraw: false,
+            };
+
+            // Act
+            await consumer.settleRound();
+
+            // Assert
+            expect(consumer.updateRoundData).toHaveBeenCalledWith(finishDraw, createResult.result);
+        });
+
+        it("should call settleBets", async () => {
+            //Arrange
+            const finishDraw: FinishDraw = {
+                result: drawResult,
+                settlementResult: drawSettlementResult,
+                roundId: roundId,
+                drawId: drawId,
+                time: mockDate,
+                isLastDraw: false,
+            };
+
+            // Act
+            await consumer.settleRound();
+
+            // Assert
+            expect(consumer.settleBets).toHaveBeenCalledWith(finishDraw);
+        });
+
+        it("should call roundResultPublisher.publishWinners", async () => {
+            //Arrange
+            const finishDraw: FinishDraw = {
+                result: drawResult,
+                settlementResult: drawSettlementResult,
+                roundId: roundId,
+                drawId: drawId,
+                time: mockDate,
+                isLastDraw: false,
+            };
+
+            // Act
+            await consumer.settleRound();
+
+            // Assert
+            expect(roundResultPublisher.publishWinners).toHaveBeenCalledWith(roundId, winningPlayers, drawId);
+        });
     });
 
     describe("queryBets", () => {

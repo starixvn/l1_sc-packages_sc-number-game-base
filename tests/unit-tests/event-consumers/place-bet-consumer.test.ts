@@ -24,6 +24,53 @@ describe("PlaceBetConsumer test", () => {
         consumer = new PlaceBetConsumer(definition, gameData, publisher);
     });
 
+    describe("validateBetRequestParams", () => {
+        describe("when betChoice is not defined", () => {
+            it("should return failure", () => {
+                // Arrange
+                const request = {
+                    betChoices: undefined,
+                } as any;
+
+                // Act
+                const actualResult = consumer.validateBetRequestParams(request);
+
+                // Assert
+                expect(actualResult[0].failure).toBe(true);
+            });
+        });
+
+        describe("when betChoice is empty", () => {
+            it("should return failure", () => {
+                // Arrange
+                const request = {
+                    betChoices: {},
+                } as any;
+
+                // Act
+                const actualResult = consumer.validateBetRequestParams(request);
+
+                // Assert
+                expect(actualResult[0].failure).toBe(true);
+            });
+        });
+
+        describe("when betChoice is valid", () => {
+            it("should NOT return failure", () => {
+                // Arrange
+                const request = {
+                    betChoices: { choice: "choice" },
+                } as any;
+
+                // Act
+                const actualResult = consumer.validateBetRequestParams(request);
+
+                // Assert
+                expect(actualResult[0].failure).toBe(false);
+            });
+        });
+    });
+
     describe("composeBettingTimeValidationCriteria", () => {
         beforeEach(() => {
             consumer.getNoticeObj = jest.fn((key) => key);

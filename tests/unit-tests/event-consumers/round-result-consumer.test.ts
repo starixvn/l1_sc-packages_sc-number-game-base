@@ -2,10 +2,9 @@ import { stub } from "jest-auto-stub";
 import Chance from "chance";
 import GameData from "../../../src/game-data";
 import { RoundResultConsumer, ProvablyFairConsumer } from "../../../src/event-consumers";
-import { GameConfigs, ProvablyFair } from "sc-game-base/src/core/game-data";
+import { ProvablyFair } from "sc-game-base/src/core/game-data";
 import { RoundResultPublisher } from "../../../src/event-publishers";
 import { GameDefinition } from "../../../src";
-import { Helpers } from "sc-game-base/src/core";
 import { CryptoHelper } from "sc-game-base/src/core/helpers";
 
 jest.mock("../../../src/helpers", () => {
@@ -22,6 +21,7 @@ jest.mock("../../../src/helpers", () => {
 });
 
 describe("roundResultConsumer", () => {
+    let consumer: RoundResultConsumer;
     const roundResultPublisher = stub<RoundResultPublisher>();
     const provablyFairConsumer = stub<ProvablyFairConsumer>();
     const definition = {
@@ -44,14 +44,14 @@ describe("roundResultConsumer", () => {
         mergeClientSeed: "",
         mergeSeed: "",
     };
-    let consumer: RoundResultConsumer;
-    let gameData = stub<GameData>();
-    let resultsRepository = { findOneAndUpdate: jest.fn(), create: jest.fn() } as any;
+    const gameData = stub<GameData>();
+    const resultsRepository = { findOneAndUpdate: jest.fn(), create: jest.fn() } as any;
 
     beforeEach(() => {
         gameData.drawId = drawId;
         gameData.roundId = roundId;
         gameData.pf = pf;
+
         consumer = new RoundResultConsumer(gameData, definition, roundResultPublisher, resultsRepository, provablyFairConsumer);
     });
 
@@ -59,11 +59,62 @@ describe("roundResultConsumer", () => {
         jest.clearAllMocks();
     });
 
+    describe("generateResult", () => {
+        describe("when result is NOT controlled from admin", () => {
+            it("should call definition.generateResult with correct data", async () => {
+                // Arrange
+                consumer.generateAndUpdatePfWithFinalSeeds = jest.fn();
+                const data = { finalHash: pf.finalHash, serverSeed: pf.serverSeed };
+
+                // Act
+                await consumer.generateResult();
+
+                // Assert
+                expect(definition.generateResult).toHaveBeenCalledWith(data);
+            });
+        });
+
+        describe("when result is controlled from admin", () => {
+            beforeEach(() => {
+                gameData.settlementResultFromAdmin = {
+                    result: {
+                        choice: "good choice",
+                    },
+                };
+            });
+
+            it("should NOT call definition.generateResult", async () => {
+                // Act
+                await consumer.generateResult();
+
+                // Assert
+                expect(definition.generateResult).not.toHaveBeenCalled();
+            });
+
+            it("should set gameData result", async () => {
+                // Act
+                await consumer.generateResult();
+
+                // Assert
+                expect(gameData.result).toEqual({ choice: "good choice" });
+            });
+        });
+    });
+
     describe("generateAndUpdatePfWithFinalSeeds", () => {
         describe("when this.definition.provablyFair = true ", () => {
             beforeEach(() => {
                 consumer.definition.provablyFair = true;
                 consumer.generateFinalSeeds = jest.fn().mockReturnValue(pf);
+                gameData.settlementResultFromAdmin = null;
+            });
+
+            it("should call resultsRepository.findOneAndUpdate with correct resultFilter", async () => {
+                // Act
+                await consumer.generateAndUpdatePfWithFinalSeeds();
+
+                // Assert
+                expect(resultsRepository.findOneAndUpdate).toHaveBeenCalledWith({ drawId: drawId }, pf);
             });
 
             it("should call generateFinalSeeds", async () => {
@@ -73,61 +124,6 @@ describe("roundResultConsumer", () => {
                 // Assert
                 expect(consumer.generateFinalSeeds).toHaveBeenCalled();
             });
-
-            it("should update resultsRepository", async () => {
-                // Act
-                await consumer.generateAndUpdatePfWithFinalSeeds();
-
-                // Assert
-                expect(resultsRepository.findOneAndUpdate).toHaveBeenCalledWith({ drawId: drawId }, pf);
-            });
-        });
-    });
-
-    describe("generateServerSeedAndPublishHash", () => {
-        const randomMode = chance.natural();
-        const serverSeed = chance.guid();
-        const sha256Hash = chance.guid();
-
-        beforeEach(() => {
-            gameData.gameConfigs = {
-                randomMode,
-            } as GameConfigs;
-            consumer.createResultRecord = jest.fn();
-            Helpers.ServerSeedHelper.generateServerSeed = jest.fn().mockReturnValueOnce(serverSeed);
-            Helpers.SeedHelper.getSHA256Hash = jest.fn().mockReturnValueOnce(sha256Hash);
-        });
-
-        it("should call generateServerSeed", () => {
-            // Act
-            consumer.generateServerSeedAndPublishHash();
-
-            // Assert
-            expect(Helpers.ServerSeedHelper.generateServerSeed).toHaveBeenCalledWith(randomMode);
-        });
-
-        it("should call getSHA256Hash", () => {
-            // Act
-            consumer.generateServerSeedAndPublishHash();
-
-            // Assert
-            expect(Helpers.SeedHelper.getSHA256Hash).toHaveBeenCalledWith(serverSeed);
-        });
-
-        it("should call createResultRecordPf", async () => {
-            // Act
-            await consumer.generateServerSeedAndPublishHash();
-
-            // Assert
-            expect(consumer.createResultRecord).toHaveBeenCalledWith(serverSeed, sha256Hash);
-        });
-
-        it("should call roundResultPublisher.publishServerSeedHash", async () => {
-            // Act
-            await consumer.generateServerSeedAndPublishHash();
-
-            // Assert
-            expect((consumer.roundResultPublisher as RoundResultPublisher).publishServerSeedHash).toHaveBeenCalled();
         });
     });
 
