@@ -85,7 +85,7 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
                 notice: this.getNoticeObj(notices.maxBetOnDraw, { maxBet }),
             },
             {
-                failure: this.anyChoiceExceedItsMaxWin(betChoices, betTracks, configs, maxBet),
+                failure: this.totalWinExceedItsMaxWin(betChoices, betTracks, configs, maxBet),
                 notice: this.getNoticeObj(notices.maxWinOfAnyChoiceReached),
             },
         ];
@@ -188,14 +188,20 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
         });
     }
 
-    anyChoiceExceedItsMaxWin(betChoices: Record<string, number>, betTracks: Record<string, number>, configs: any, maxBet: number) {
+    totalWinExceedItsMaxWin(betChoices: Record<string, number>, betTracks: Record<string, number>, configs: any, maxBet: number) {
         const maxWinPerRound = configs.maxWinPerRound;
         const odds = this.gameData.odds;
-        return Object.keys(betChoices).some((choice) => {
+
+        const winPerChoices = this.definition.choices.map((choice) => {
             const currentBetAmount = betTracks[choice] ?? 0;
+            const betAmount = betChoices[choice] ?? 0;
             const choiceOdds = odds?.[choice] ?? 1;
-            return maxWinPerRound > 0 && maxBet > 0 && (betChoices[choice] + currentBetAmount) * choiceOdds > maxWinPerRound * maxBet;
+            return (betAmount + currentBetAmount) * choiceOdds;
         });
+
+        const totalWin = winPerChoices.reduce((total, value) => total + value, 0);
+
+        return maxWinPerRound > 0 && maxBet > 0 && totalWin > maxWinPerRound * maxBet;
     }
 
     anyChoiceBelowMinBet(betChoices: Record<string, number>, minBet: number) {
