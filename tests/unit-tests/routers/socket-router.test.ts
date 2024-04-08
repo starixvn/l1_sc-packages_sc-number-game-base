@@ -108,17 +108,16 @@ describe("SocketRounter tests", () => {
 
     describe("getPfInfo", () => {
         const payload = {
-            roundId: 1,
             drawId: 1,
         };
 
         const clientId = chance.natural();
 
         beforeEach(() => {
+            definition.numberOfTurnsPerRound = 4;
             gameData.roundId = 1;
             gameData.drawId = 1;
             payload.drawId = 1;
-            payload.roundId = 1;
             router.socketClient = { emit: jest.fn(), id: clientId } as any;
             gameData.realPlayers[clientId] = {
                 profile: {
@@ -177,22 +176,6 @@ describe("SocketRounter tests", () => {
             });
         });
 
-        describe("when payload.roundId > gameData.roundId", () => {
-            it("should not return anything", async () => {
-                // arrange
-                definition.provablyFair = true;
-                router.verify = jest.fn().mockReturnValue(true);
-                payload.roundId = 2;
-                gameData.roundId = 1;
-
-                // act
-                await router.getPfInfo(payload);
-
-                // assert
-                expect(router.socketClient.emit).not.toHaveBeenCalled();
-            });
-        });
-
         describe("when payload.drawId > gameData.drawId", () => {
             it("should not return anything", async () => {
                 // arrange
@@ -210,16 +193,41 @@ describe("SocketRounter tests", () => {
         });
 
         describe("when all conditions are valid", () => {
-            it("should call roundQuery.getPfInfo", async () => {
+            const testCases = [
+                {
+                    drawId: 1,
+                    roundId: 1,
+                },
+                {
+                    drawId: 2,
+                    roundId: 1,
+                },
+                {
+                    drawId: 3,
+                    roundId: 1,
+                },
+                {
+                    drawId: 4,
+                    roundId: 1,
+                },
+                {
+                    drawId: 5,
+                    roundId: 2,
+                },
+            ];
+            it.each(testCases)("should call roundQuery.getPfInfo", async ({ drawId, roundId }) => {
                 // arrange
+                payload.drawId = drawId;
                 definition.provablyFair = true;
+                gameData.roundId = roundId;
+                gameData.drawId = drawId;
                 router.verify = jest.fn().mockReturnValue(true);
 
                 // act
                 await router.getPfInfo(payload);
 
                 // assert
-                expect(roundQuery.getPfInfo).toHaveBeenCalledWith(payload.drawId, payload.roundId);
+                expect(roundQuery.getPfInfo).toHaveBeenCalledWith(payload.drawId, roundId);
             });
 
             it("should emit correct data", async () => {

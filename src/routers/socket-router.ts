@@ -36,16 +36,13 @@ export default class SocketRouter extends BaseSocketRouter {
 
     async getPfInfo(payload: any) {
         try {
-            if (
-                !this.definition.provablyFair ||
-                !this.verify() ||
-                payload.roundId > this.gameData.roundId ||
-                payload.drawId > this.gameData.drawId
-            ) {
+            if (!this.definition.provablyFair || !this.verify() || payload.drawId > this.gameData.drawId) {
                 return;
             }
 
-            const pfResult = await this.roundQuery.getPfInfo(payload.drawId, payload.roundId);
+            const roundId = Math.ceil(payload.drawId / this.definition.numberOfTurnsPerRound);
+
+            const pfResult = await this.roundQuery.getPfInfo(payload.drawId, roundId);
 
             const realPlayer = this.gameData.realPlayers[this.socketClient.id];
 
