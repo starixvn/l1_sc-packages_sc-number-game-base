@@ -30,12 +30,13 @@ describe("roundResultPublisher", () => {
     };
 
     let publisher: RoundResultPublisher;
-    let gameData = stub<GameData>();
+    const gameData = stub<GameData>();
 
     beforeEach(() => {
         gameData.result = result;
         gameData.roundId = roundId;
         gameData.drawId = drawId;
+        gameData.pf = pf;
         publisher = new RoundResultPublisher("BacBall", gameData);
         publisher.publishToAllUsers = jest.fn();
         publisher.publishToAllAdmins = jest.fn();
@@ -43,10 +44,6 @@ describe("roundResultPublisher", () => {
 
     describe("publishServerSeedHash", () => {
         describe("when server seed hash exists", () => {
-            beforeEach(() => {
-                publisher.gameData.pf = pf;
-            });
-
             it("should publish server seed hash value to all users", () => {
                 // Act
                 publisher.publishServerSeedHash();
@@ -59,6 +56,7 @@ describe("roundResultPublisher", () => {
         describe("when server seed hash value does not exist", () => {
             it("should not publish server seed hash value", () => {
                 // Arrange
+                gameData.pf = {} as ProvablyFair;
 
                 // Act
                 publisher.publishServerSeedHash();
@@ -84,6 +82,23 @@ describe("roundResultPublisher", () => {
                     winningPlayers,
                 },
             });
+        });
+    });
+
+    describe("getHashedResult", () => {
+        it("should return correct", () => {
+            // Arrange
+            const expected = {
+                ...pf,
+                roundId,
+                drawId,
+                result,
+            };
+            // Act
+            const actual = publisher.getHashedResult();
+
+            // Assert
+            expect(actual).toEqual(expected);
         });
     });
 });
