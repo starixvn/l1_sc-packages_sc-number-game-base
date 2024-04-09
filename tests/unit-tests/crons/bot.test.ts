@@ -28,6 +28,10 @@ describe("Bot tests", () => {
         bot = new Bot(definition, gameData, publisher, gameManagementApiClientFactory, {} as any, provablyFairConsumer);
     });
 
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
     describe("run", () => {
         it("should run correctly when during bet time", async () => {
             // arrange
@@ -453,6 +457,121 @@ describe("Bot tests", () => {
                 { $set: update, $setOnInsert: create },
                 { upsert: true, setDefaultsOnInsert: true }
             );
+        });
+    });
+
+    describe("getNumberOfBotsToJoin", () => {
+        const testCases = [...Array(10).keys()];
+        beforeEach(() => {
+            // Arrange
+            bot.maxNumberOfBots = 10;
+            bot.botsInRoom = { 1: "bot1", 2: "bot2", 3: "bot3", 4: "bot4" };
+            bot.getCurrentTimeOfTurn = jest.fn().mockReturnValue(2);
+        });
+
+        it.each(testCases)("should return correct", () => {
+            // Act
+            const actual = bot.getNumberOfBotsToJoin();
+
+            // Assert
+            expect(actual).toBeLessThanOrEqual(5);
+            expect(actual).toBeGreaterThanOrEqual(1);
+        });
+    });
+
+    describe("leaveRoom", () => {
+        beforeEach(() => {
+            // Arrange
+            bot.maxNumberOfBots = 10;
+            bot.botsInRoom = { 1: "bot1", 2: "bot2", 3: "bot3", 4: "bot4" };
+            bot.getCurrentTimeOfTurn = jest.fn().mockReturnValue(2);
+        });
+
+        it("should return correct", async () => {
+            // Arrange
+            const mockFunction = jest.fn();
+            bot.getRemovalBotIds = mockFunction;
+            bot.removeBots = jest.fn();
+
+            // Act
+            await bot.leaveRoom();
+
+            // Assert
+            expect(mockFunction.mock.calls[0][0]).toBeGreaterThanOrEqual(1);
+        });
+    });
+
+    describe("getBotsToBet", () => {
+        beforeEach(() => {
+            gameData.gameConfigs.bot_maxbet = 5;
+            bot.maxNumberOfBots = 10;
+            bot.botsInRoom = {
+                1: {
+                    name: "bot1",
+                    totalBet: 15,
+                    remainTickets: 1,
+                },
+                2: {
+                    name: "bot2",
+                    totalBet: 4,
+                    remainTickets: 0,
+                },
+                3: {
+                    name: "bot3",
+                    totalBet: 3,
+                    remainTickets: 1,
+                },
+                4: {
+                    name: "bot4",
+                    totalBet: 4,
+                    remainTickets: 1,
+                },
+            };
+            bot.getCurrentTimeOfTurn = jest.fn().mockReturnValue(2);
+        });
+
+        it("should return correct", () => {
+            // Act
+            const actual = bot.getBotsToBet();
+
+            // Assert
+            expect(actual.length).toEqual(1);
+        });
+    });
+
+    describe("getRemovalBotIds", () => {
+        const totalRemoval = 1;
+
+        beforeEach(() => {
+            bot.botsInRoom = { 1: "bot1", 2: "bot2", 3: "bot3", 4: "bot4" };
+            bot.removeBotAtTheTableRoundFrequency = 4;
+            bot.removeBotAtTheTable = false;
+        });
+
+        describe("When drawId % bot.removeBotAtTheTableRoundFrequency === 0", () => {
+            it("should set bot.removeBotAtTheTable = true", () => {
+                // Arrange
+                gameData.drawId = 8;
+
+                // Act
+                bot.getRemovalBotIds(totalRemoval);
+
+                // Assert
+                expect(bot.removeBotAtTheTable).toBe(true);
+            });
+        });
+
+        describe("When drawId % bot.removeBotAtTheTableRoundFrequency !== 0", () => {
+            it("should bot.removeBotAtTheTable = false", () => {
+                // Arrange
+                gameData.drawId = 7;
+
+                // Act
+                bot.getRemovalBotIds(totalRemoval);
+
+                // Assert
+                expect(bot.removeBotAtTheTable).toBe(false);
+            });
         });
     });
 });
