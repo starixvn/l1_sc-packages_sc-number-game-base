@@ -4,16 +4,21 @@ import { RoundQuery } from "../../../src/query-apis";
 import SocketRouter from "../../../src/routers/socket-router";
 import { BaseSocketRouter } from "sc-game-base/src/core/routers";
 import { Chance } from "chance";
+import { UserRateLimiter } from "../../../src/rate-limiters";
+import { logger } from "sc-common";
 
 describe("SocketRounter tests", () => {
     const chance = new Chance();
     const gameData = stub<GameData>();
     const definition = stub<GameDefinition>();
     const roundQuery = stub<RoundQuery>();
+    const userRateLimiter = stub<UserRateLimiter>();
+    const logService = stub(logger);
+
     let router: SocketRouter;
     beforeEach(() => {
         //@ts-ignore
-        router = new SocketRouter({ gameData, definition, roundQuery });
+        router = new SocketRouter({ gameData, definition, roundQuery, userRateLimiter, logService });
     });
 
     afterEach(() => {
@@ -37,8 +42,23 @@ describe("SocketRounter tests", () => {
 
     describe("getLobbyData", () => {
         beforeEach(() => {
-            router.socketClient = { emit: jest.fn() } as any;
+            router.socketClient = { emit: jest.fn(), disconnect: jest.fn() } as any;
         });
+
+        describe("when authenticated", () => {
+            it("should call userRateLimiter.verify", async () => {
+                // arrange
+                BaseSocketRouter.prototype.verify = jest.fn().mockReturnValue(true);
+                userRateLimiter.verify = jest.fn().mockReturnValue(true);
+
+                // act
+                await router.getLobbyData();
+
+                // assert
+                expect(userRateLimiter.verify).toHaveBeenCalled();
+            });
+        });
+
         describe("when unauthenticated", () => {
             it("should not return anything", async () => {
                 // arrange
@@ -159,6 +179,23 @@ describe("SocketRounter tests", () => {
             });
         });
 
+        describe("when authenticated & having provably fair", () => {
+            it("should call userRateLimiter.verify", async () => {
+                // arrange
+                payload.drawId = 2;
+                gameData.drawId = 1;
+                definition.provablyFair = true;
+                userRateLimiter.verify = jest.fn().mockReturnValue(true);
+                BaseSocketRouter.prototype.verify = jest.fn().mockReturnValue(true);
+
+                // act
+                await router.getPfInfo(payload);
+
+                // assert
+                expect(userRateLimiter.verify).toHaveBeenCalled();
+            });
+        });
+
         describe("when there is an error", () => {
             it("should log error", async () => {
                 // arrange
@@ -259,6 +296,79 @@ describe("SocketRounter tests", () => {
 
                 // assert
                 expect(router.socketClient.emit).toHaveBeenCalledWith("numberGame", pfInfo);
+            });
+        });
+    });
+
+    describe("handlePlaceBet", () => {
+        const payload = {};
+
+        beforeEach(() => {
+            BaseSocketRouter.prototype.verify = jest.fn().mockReturnValue(false);
+            router.verify = jest.fn();
+        });
+        it("should call base verify", async () => {
+            // act
+            router.handlePlaceBet(payload);
+
+            // assert
+            expect(BaseSocketRouter.prototype.verify).toHaveBeenCalled();
+        });
+
+        it("should NOT call verify", async () => {
+            // act
+            router.handlePlaceBet(payload);
+
+            // assert
+            expect(router.verify).not.toHaveBeenCalled();
+        });
+
+        it("should NOT userRateLimiter.verify", async () => {
+            // act
+            router.handlePlaceBet(payload);
+
+            // assert
+            expect(userRateLimiter.verify).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("verify", () => {
+        const clientId = chance.natural();
+
+        beforeEach(() => {
+            router.socketClient = { emit: jest.fn(), id: clientId, disconnect: jest.fn() } as any;
+            gameData.realPlayers[clientId] = {
+                profile: {
+                    name: "player1",
+                },
+            };
+            BaseSocketRouter.prototype.verify = jest.fn().mockReturnValue(true);
+            logService.logError = jest.fn();
+        });
+
+        it("should call userRateLimiter.verify", () => {
+            // Act
+            router.verify();
+
+            // Assert
+            expect(userRateLimiter.verify).toHaveBeenCalled();
+        });
+
+        describe("when rate limit exceeded", () => {
+            beforeEach(() => {
+                userRateLimiter.verify = jest.fn().mockReturnValue(false);
+                userRateLimiter.interval = 1000;
+            });
+
+            it("should call userRateLimiter logError", () => {
+                // Arrange
+                const errorMessage = `Rate limit exceeded; request rejected. Request again after 1 seconds`;
+
+                // Act
+                router.verify();
+
+                // Assert
+                expect(logService.logError).toHaveBeenCalledWith(errorMessage);
             });
         });
     });

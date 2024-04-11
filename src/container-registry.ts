@@ -1,4 +1,4 @@
-import { asClass } from "awilix";
+import { asClass, AwilixContainer } from "awilix";
 import { Table } from "sc-game-base";
 import {
     InGameConsumer,
@@ -14,8 +14,20 @@ import { GameStatusPublisher, RoundResultPublisher, RunningRoundInfoPublisher } 
 import { HistoryQuery, RoundQuery } from "./query-apis";
 import { PlaceBetPublisher } from "sc-game-base/src/core/event-publishers";
 import { HttpRouter, SocketRouter } from "./routers";
+import { GameDefinition, GameData } from "sc-game-base/src/core";
+import { UserRateLimiter } from "./rate-limiters";
 
 export default class ContainerRegistry extends Table.TableContainerRegistry {
+    register(appConfigs: any, definition: GameDefinition, gameData: GameData): AwilixContainer<any> {
+        super.register(appConfigs, definition, gameData);
+
+        this.container.register({
+            userRateLimiter: asClass(UserRateLimiter).singleton(),
+        });
+
+        return this.container;
+    }
+
     registerApis() {
         super.registerApis();
         this.container.register({
