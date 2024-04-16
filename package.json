@@ -41,7 +41,7 @@
         "random-js": "^2.1.0",
         "randomstring": "^1.3.0",
         "sc-common": "1.8.1",
-        "sc-game-base": "5.0.1-beta.19",
+        "sc-game-base": "5.0.1-beta.23",
         "sc-pf-client-seed": "1.0.1-beta.0",
         "socket.io": "^4.5.4",
         "socket.io-prom-metrics": "^1.0.3"
