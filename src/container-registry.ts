@@ -23,7 +23,6 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
 
         this.container.register({
             userRateLimiter: asClass(UserRateLimiter).singleton(),
-            maxCombinedClientSeeds: asValue(0),
         });
 
         return this.container;
