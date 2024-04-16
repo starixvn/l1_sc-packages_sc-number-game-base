@@ -1,4 +1,4 @@
-import { asClass, AwilixContainer } from "awilix";
+import { asClass, asValue, AwilixContainer } from "awilix";
 import { Table } from "sc-game-base";
 import {
     InGameConsumer,
@@ -23,6 +23,7 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
 
         this.container.register({
             userRateLimiter: asClass(UserRateLimiter).singleton(),
+            maxCombinedClientSeeds: asValue(0),
         });
 
         return this.container;
