@@ -132,10 +132,16 @@ export default class SocketRouter extends BaseSocketRouter {
             } seconds`;
             this.socketClient.emit("message", { error: errorMessage });
             this.socketClient.disconnect(true);
-
             this.logService.setTag({ id: "socket-io-id", value: this.socketClient.id });
             this.logService.setTag({ id: "username", value: realPlayer.profile?.name });
             this.logService.setTag({ id: "userId", value: realPlayer.UID });
+            this.logService.setTag({ id: "playerId", value: realPlayer.session?.playerId });
+            this.logService.setTag({ id: "playerName", value: realPlayer.session?.playerName });
+            this.logService.setTag({ id: "operatorId", value: realPlayer.session?.operatorId });
+            this.logService.setTag({ id: "siteName", value: realPlayer.session?.siteName });
+            this.logService.setTag({ id: "siteId", value: realPlayer.session?.siteId });
+            this.logService.setTag({ id: "ssoTime", value: realPlayer.session?.ssoTime });
+            this.logService.setTag({ id: "browserUserAgent", value: realPlayer.session?.browserUserAgent });
             this.logService.logError(errorMessage);
             this.logService.setTag({ id: "socket-io-id", value: "" });
             this.logService.setTag({ id: "username", value: "" });
