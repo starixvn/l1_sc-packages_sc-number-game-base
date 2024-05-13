@@ -1,3 +1,20 @@
+# [1.1.0](https://git3.nexdev.net/l1/sc-packages/sc-number-game-base/compare/v1.0.0...v1.1.0) (2024-05-13)
+
+
+### Bug Fixes
+
+* count total bet in testing currency ([062e65d](https://git3.nexdev.net/l1/sc-packages/sc-number-game-base/commit/062e65d91aabefd9128e8b0b827604e0e27529e2))
+* register maxCombinedClientSeeds ([d01438f](https://git3.nexdev.net/l1/sc-packages/sc-number-game-base/commit/d01438f74ad58f894fd8681408162c9bb544f0fc))
+* register maxCombinedClientSeeds by default ([bdf1ca6](https://git3.nexdev.net/l1/sc-packages/sc-number-game-base/commit/bdf1ca6484a0466f37680b1791d7a28d02e622f8))
+* sonar ([216422f](https://git3.nexdev.net/l1/sc-packages/sc-number-game-base/commit/216422f6d73e026e05c6ead3480f0dcd445f8cbb))
+* update sc-game-base stable ([e4c1816](https://git3.nexdev.net/l1/sc-packages/sc-number-game-base/commit/e4c18163743714bb5ce60efa07026b517ac70a8e))
+* update sentry log when reach rate limit ([4ce459a](https://git3.nexdev.net/l1/sc-packages/sc-number-game-base/commit/4ce459af2917584dff8a1571426a1e4a782b2d1b))
+
+
+### Features
+
+* add rate limit to socket event ([8707ffe](https://git3.nexdev.net/l1/sc-packages/sc-number-game-base/commit/8707ffebd5b316361269f4327a577b1dfc22b972))
+
 # 1.0.0 (2024-04-11)
 
 
