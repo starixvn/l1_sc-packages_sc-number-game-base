@@ -1,6 +1,6 @@
 {
     "name": "sc-number-game-base",
-    "version": "1.0.1-beta.4",
+    "version": "1.0.1-beta.5",
     "description": "The codebase of number games",
     "type": "module",
     "types": "dist/index.d.ts",
