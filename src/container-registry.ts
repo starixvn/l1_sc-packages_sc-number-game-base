@@ -1,4 +1,4 @@
-import { asClass, asValue, AwilixContainer } from "awilix";
+import { asClass, AwilixContainer } from "awilix";
 import { Table } from "sc-game-base";
 import {
     InGameConsumer,
