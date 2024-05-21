@@ -10,6 +10,7 @@ jest.mock("sc-common", () => ({
             invalidBet: "invalidBet",
             cannotPlaceBet: "cannotPlaceBet",
             minBet: "minBet",
+            maxBet: "maxBet",
             disallowHedgeBet: "disallowHedgeBet",
         },
     },
@@ -208,9 +209,13 @@ describe("PlaceBetConsumer test", () => {
             expect(actual.notice).toBe("minBet");
         });
 
-        it("should return failure when totalAmount > maxBet", () => {
+        it("should return failure when totalAmountOfExistingBets + totalAmount > maxBet", () => {
+            // arrange
+            consumer.gameData.ingame = { [player.profile.name]: { betTracks: { player: 10, tie: 10 } } };
+            definition.numberOfTurnsPerRound = 2;
+
             // act
-            const actual = consumer.composeBetAmountValidationCriteria(player, {}, 55, false)[4];
+            const actual = consumer.composeBetAmountValidationCriteria(player, { player: 40 }, 40, false)[4];
 
             // assert
             expect(actual.failure).toBe(true);
@@ -220,13 +225,14 @@ describe("PlaceBetConsumer test", () => {
         it("should return failure when totalAmountOfExistingBets + totalAmount > maxBet", () => {
             // arrange
             consumer.gameData.ingame = { [player.profile.name]: { betTracks: { player: 10, tie: 10 } } };
+            definition.numberOfTurnsPerRound = 1;
 
             // act
-            const actual = consumer.composeBetAmountValidationCriteria(player, { player: 40 }, 40, false)[5];
+            const actual = consumer.composeBetAmountValidationCriteria(player, { player: 40 }, 40, false)[4];
 
             // assert
             expect(actual.failure).toBe(true);
-            expect(actual.notice).toBe("SB1942");
+            expect(actual.notice).toBe("maxBet");
         });
 
         it("should return false when valid bets", () => {

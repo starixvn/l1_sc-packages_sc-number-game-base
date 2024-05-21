@@ -17,6 +17,8 @@ type BetPayload = {
 
 export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsumer {
     declare gameData: GameData;
+    declare definition: GameDefinition;
+
     validateBetRequestParams(request: BetPayload) {
         const { betChoices } = request;
 
@@ -30,7 +32,7 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
 
     composeBettingTimeValidationCriteria(_: number) {
         const configs = this.gameData.gameConfigs;
-        const numberOfTurnsPerRound = (this.definition as GameDefinition).numberOfTurnsPerRound;
+        const numberOfTurnsPerRound = this.definition.numberOfTurnsPerRound;
         const { placingBets, showingResult, wholeTurn, lockingBet } = this.definition.durations as Duration;
         const time = getCurrentTimeOfTurn(this.gameData.remainingTime, wholeTurn, numberOfTurnsPerRound);
         const showingResultTime = placingBets + showingResult;
@@ -56,6 +58,7 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
         const configs = this.gameData.gameConfigs;
         const { betTracks }: { betTracks: Record<string, number> } = this.gameData.ingame[player.profile.name] || { betTracks: {} };
         const totalAmountOfExistingBets = Object.values(betTracks).reduce((total, value) => total + value, 0);
+
         const minBet = Math.max(player.profile.minBet, settings.minBet);
         const maxBet = Math.min(player.profile.maxBet, settings.maxBet);
 
@@ -77,12 +80,11 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
                 notice: this.getNoticeObj(helpers.noticeHelper.minBet, { minBet }),
             },
             {
-                failure: totalAmount > maxBet,
-                notice: this.getNoticeObj(notices.maxBetOnDraw, { maxBet }),
-            },
-            {
                 failure: totalAmountOfExistingBets + totalAmount > maxBet,
-                notice: this.getNoticeObj(notices.maxBetOnDraw, { maxBet }),
+                notice: this.getNoticeObj(
+                    this.definition.numberOfTurnsPerRound === 1 ? helpers.noticeHelper.maxBet : notices.maxBetOnDraw,
+                    { maxBet }
+                ),
             },
             {
                 failure: this.totalWinExceedItsMaxWin(betChoices, betTracks, configs, maxBet),
