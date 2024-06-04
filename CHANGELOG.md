@@ -1,3 +1,10 @@
+## [1.1.1](https://git3.nexdev.net/l1/sc-packages/sc-number-game-base/compare/v1.1.0...v1.1.1) (2024-06-04)
+
+
+### Bug Fixes
+
+* update maxbet notice ([a8f8109](https://git3.nexdev.net/l1/sc-packages/sc-number-game-base/commit/a8f810953548422d8fe4b536bf99963cdd2c0c1d))
+
 # [1.1.0](https://git3.nexdev.net/l1/sc-packages/sc-number-game-base/compare/v1.0.0...v1.1.0) (2024-05-13)
 
 
