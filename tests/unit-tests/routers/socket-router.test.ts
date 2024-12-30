@@ -42,7 +42,7 @@ describe("SocketRounter tests", () => {
 
     describe("getLobbyData", () => {
         beforeEach(() => {
-            router.socketClient = { emit: jest.fn(), disconnect: jest.fn() } as any;
+            router.socketClient = { emit: jest.fn(), disconnect: jest.fn(), id: "socketId" } as any;
         });
 
         describe("when authenticated", () => {
@@ -95,6 +95,17 @@ describe("SocketRounter tests", () => {
                 router.gameData.players = players;
                 router.gameData.remainingTime = 10;
                 router.definition.name = "game1";
+                router.gameData.realPlayers["socketId"] = {
+                    profile: {
+                        name: "player",
+                        minBet: 10,
+                        maxBet: 100,
+                    },
+                    session: {
+                        currencyGroupId: "1",
+                    },
+                };
+                router.gameData.currencyGroupGames = [{ groupId: 1, minBet: 1, maxBet: 100 }];
 
                 // act
                 await router.getLobbyData();
@@ -104,6 +115,7 @@ describe("SocketRounter tests", () => {
                     players,
                     roundHistory: [{ drawId: 1 }],
                     remainingTime: 10,
+                    betLimit: { minBet: 10, maxBet: 100 },
                 });
             });
         });
