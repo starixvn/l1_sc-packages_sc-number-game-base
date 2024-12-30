@@ -76,12 +76,23 @@ export default class SocketRouter extends BaseSocketRouter {
                 {},
                 this.definition.numberOfTurnsPerRound
             );
-            const result = { players: this.gameData.players, roundHistory, remainingTime: this.gameData.remainingTime };
+            const betLimit = this.getUserBetLimit();
+            const result = { players: this.gameData.players, roundHistory, remainingTime: this.gameData.remainingTime, betLimit };
 
             this.socketClient.emit(this.definition.name, result);
         } catch (error) {
             this.logService.logError(error);
         }
+    }
+
+    getUserBetLimit() {
+        const player = this.gameData.realPlayers[this.socketClient.id];
+
+        const settings = this.gameData.currencyGroupGames.find((x) => x.groupId.toString() === player.session.currencyGroupId);
+        const minBet = Math.max(player.profile.minBet, settings.minBet);
+        const maxBet = Math.min(player.profile.maxBet, settings.maxBet);
+
+        return { minBet, maxBet };
     }
 
     async getPfInfo(payload: any) {
