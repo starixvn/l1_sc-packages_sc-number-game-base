@@ -287,7 +287,7 @@ describe("SettleGameRoundConsumer test", () => {
                 .mockReturnValue({
                     exec: jest.fn().mockReturnValue({ id: 1, result, settlementResult }),
                 });
-            consumer.callEndGame = jest.fn();
+            consumer.callEndGame = jest.fn().mockResolvedValue({ isOk: true });
             jest.spyOn(consumer, "queryBets").mockImplementation(async () => queryBets);
             consumer.calculateBetResult = jest.fn(() => betResult);
             consumer.captureBetResult = jest.fn();

@@ -1,5 +1,12 @@
 import { getBetOdds } from "../../../src/helpers";
 
+// Add polyfill for toSorted if not available
+if (!Array.prototype.toSorted) {
+    Array.prototype.toSorted = function (compareFn?: (a: any, b: any) => number) {
+        return [...this].sort(compareFn);
+    };
+}
+
 describe("CalculateOdds tests", () => {
     const margins = [
         { max: 2, choice1: 0.01, choice2: 0.01 },
