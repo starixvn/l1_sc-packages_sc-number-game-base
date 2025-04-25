@@ -14,7 +14,14 @@ describe("SettleGameRoundConsumer test", () => {
     const definition = stub<GameDefinition>();
     const gameData = stub<GameData>();
     const roundResultPublisher = stub<RoundResultPublisher>();
-    const userBetResultPublisher = stub<Core.BaseEventPublishers.UserBetResultPublisher>();
+    const userBetResultPublisher = stub<Core.BaseEventPublishers.UserBetResultPublisher>({
+        publish: jest.fn(),
+        publishApiError: jest.fn(),
+        logService: { logError: jest.fn() },
+        publishToUser: jest.fn(),
+        gameName: "test-game",
+        gameData: {},
+    });
     const endGame = jest.fn();
     const roundsRepository = { find: (): any => {}, create: (): any => {}, findOneAndUpdate: (): any => {} };
     const betsRepository = { find: (): any => {} };
@@ -22,11 +29,12 @@ describe("SettleGameRoundConsumer test", () => {
     const gameManagementApiClientFactory = new GameManagementApiClientFactory({});
 
     beforeEach(() => {
+        jest.clearAllMocks();
         consumer = new SettleGameRoundConsumer({
             definition: definition,
             gameData: gameData,
             roundResultPublisher: roundResultPublisher,
-            userBetResultPublisher: userBetResultPublisher,
+            userBetResultPublisher: userBetResultPublisher as any,
             endGame: endGame,
             roundsRepository: roundsRepository,
             betsRepository: betsRepository,
@@ -215,148 +223,147 @@ describe("SettleGameRoundConsumer test", () => {
     });
 
     describe("settleBets", () => {
-        const result = [
-            { drawId: 1, player: 1, banker: 1 },
-            { drawId: 2, player: 2, banker: 3 },
-            { drawId: 3, player: 3, banker: 2 },
-            { drawId: 4, player: 4, banker: 4 },
-        ];
-        const settlementResult = [
-            { drawId: 1, player: false, banker: false, tie: true },
-            { drawId: 2, player: false, banker: true, tie: false },
-            { drawId: 3, player: true, banker: false, tie: false },
-            { drawId: 4, player: false, banker: false, tie: true },
-        ];
-
-        const queryBets = [
-            {
-                uid: chance.guid(),
-                banker: chance.natural(),
-                playerId: chance.natural(),
-                siteId: chance.natural(),
-                save: jest.fn(),
-                drawId: 3,
-                rate: chance.natural(),
-                odds: { player: 1.96, banker: 1.96, tie: 10 },
-            },
-            {
-                uid: chance.guid(),
-                player: chance.natural(),
-                playerId: chance.natural(),
-                siteId: chance.natural(),
-                save: jest.fn(),
-                drawId: 2,
-                rate: chance.natural(),
-                odds: { player: 1.9, banker: 1.9, tie: 15 },
-            },
-            {
-                uid: chance.guid(),
-                player: chance.natural(),
-                playerId: chance.natural(),
-                siteId: chance.natural(),
-                save: jest.fn(),
-                drawId: 1,
-                rate: chance.natural(),
-                odds: { player: 1.86, banker: 1.86, tie: 20 },
-            },
-        ];
-
-        const betResult = {
-            totalBetAmount: chance.natural(),
-            totalWin: chance.natural(),
-            netWin: chance.natural(),
-            totalLost: chance.natural(),
-            winningByChoices: {},
+        const mockDate = new Date();
+        const drawId = chance.natural();
+        const bet = {
+            uid: "testUser123",
+            odds: 2,
+            rate: 1.5,
+            betwin: 0,
+            paid: false,
+            save: jest.fn(),
         };
-
-        const settleBetParams = {
-            result: { drawId: 1, player: 1, banker: 1 },
-            settlementResult: { drawId: 1, player: false, banker: false, tie: true },
-            roundId: 1,
-            drawId: 4,
-            time: new Date(),
-            isLastDraw: true,
+        const finishDraw: FinishDraw = {
+            drawId: drawId,
+            roundId: chance.natural(),
+            result: { player: 10, banker: 2 },
+            settlementResult: { player: true, banker: false },
+            time: mockDate,
+            isLastDraw: false,
         };
+        const betResult = { totalWin: 100 };
 
         beforeEach(() => {
-            definition.choices = ["player", "banker", "tie"];
-            definition.generateResult.mockReturnValueOnce(result);
-            definition.settle.mockReturnValueOnce(settlementResult);
-            jest.spyOn(roundsRepository, "create")
+            jest.clearAllMocks();
+            jest.spyOn(betsRepository, "find")
                 .mockReturnThis()
                 .mockReturnValue({
-                    exec: jest.fn().mockReturnValue({ id: 1, result, settlementResult }),
+                    exec: jest.fn().mockResolvedValue([bet]),
                 });
+            jest.spyOn(tempBetsRepository, "find")
+                .mockReturnThis()
+                .mockReturnValue({
+                    exec: jest.fn().mockResolvedValue([]),
+                });
+            consumer.calculateBetResult = jest.fn().mockReturnValue(betResult);
             consumer.callEndGame = jest.fn().mockResolvedValue({ isOk: true });
-            jest.spyOn(consumer, "queryBets").mockImplementation(async () => queryBets);
-            consumer.calculateBetResult = jest.fn(() => betResult);
             consumer.captureBetResult = jest.fn();
+            consumer.userBetResultPublisher = userBetResultPublisher;
+            definition.choices = ["player", "banker"];
         });
 
-        it("should call queryBets with drawId", async () => {
+        it("should process bet and update bet result when API call succeeds", async () => {
+            // Arrange
+            const expectedBetResult = { totalWin: 100 };
+            jest.spyOn(consumer, "calculateBetResult").mockReturnValue(expectedBetResult);
+
             // Act
-            await consumer.settleBets(settleBetParams);
+            await consumer.settleBets(finishDraw);
 
             // Assert
-            expect(consumer.queryBets).toHaveBeenCalledWith(settleBetParams.drawId);
+            expect(bet.betwin).toBe(expectedBetResult.totalWin);
+            expect(bet.paid).toBe(true);
+            expect(bet.save).toHaveBeenCalled();
+            expect(consumer.captureBetResult).toHaveBeenCalledWith(bet.uid, expectedBetResult, bet.rate);
+            expect(userBetResultPublisher.publish).toHaveBeenCalledWith(bet.uid, expectedBetResult);
+            expect(userBetResultPublisher.publishApiError).not.toHaveBeenCalled();
         });
 
-        Object.keys(queryBets)
-            .map((index) => +index)
-            .forEach((betIndex) => {
-                describe(`with bet ${betIndex + 1}`, () => {
-                    it("should call calculateBetResult", async () => {
-                        //Arrange
-                        const settlementDrawResult = { player: false, banker: false, tie: true };
-
-                        // Act
-                        await consumer.settleBets(settleBetParams);
-
-                        // Assert
-                        expect(consumer.calculateBetResult).toHaveBeenNthCalledWith(
-                            betIndex + 1,
-                            settlementDrawResult,
-                            queryBets[betIndex],
-                            queryBets[betIndex].odds
-                        );
-                    });
-
-                    it("should call endGame", async () => {
-                        // Act
-                        await consumer.settleBets(settleBetParams);
-
-                        // Assert
-                        expect(consumer.callEndGame).toHaveBeenNthCalledWith(
-                            betIndex + 1,
-                            queryBets[betIndex],
-                            settleBetParams.drawId,
-                            settleBetParams.time,
-                            betResult
-                        );
-                    });
-
-                    it("should call captureBetResult", async () => {
-                        // Act
-                        await consumer.settleBets(settleBetParams);
-
-                        // Assert
-                        expect(consumer.captureBetResult).toHaveBeenNthCalledWith(
-                            betIndex + 1,
-                            queryBets[betIndex].uid,
-                            betResult,
-                            queryBets[betIndex].rate
-                        );
-                    });
-
-                    it("should publish bet result to user", async () => {
-                        // Act
-                        await consumer.settleBets(settleBetParams);
-
-                        // Assert
-                        expect(userBetResultPublisher.publish).toHaveBeenNthCalledWith(betIndex + 1, queryBets[betIndex].uid, betResult);
-                    });
-                });
+        it("should handle API error and publish error message", async () => {
+            // Arrange
+            const apiError = { isOk: false, response: "API Error" };
+            consumer.callEndGame = jest.fn().mockImplementation(async (bet, drawId, time, betResult) => {
+                const result = apiError;
+                if (!result.isOk) {
+                    await userBetResultPublisher.publishApiError(bet.uid, result.response);
+                }
+                return result;
             });
+
+            // Act
+            await consumer.settleBets(finishDraw);
+
+            // Assert
+            expect(userBetResultPublisher.publishApiError).toHaveBeenCalledWith(bet.uid, apiError.response);
+            expect(userBetResultPublisher.publish).not.toHaveBeenCalled();
+            expect(consumer.captureBetResult).toHaveBeenCalledWith(bet.uid, betResult, bet.rate);
+            expect(bet.save).toHaveBeenCalled();
+        });
+
+        it("should process multiple bets concurrently", async () => {
+            // Arrange
+            const bet2 = { ...bet, uid: "testUser456" };
+            jest.spyOn(betsRepository, "find")
+                .mockReturnThis()
+                .mockReturnValue({
+                    exec: jest.fn().mockResolvedValue([bet, bet2]),
+                });
+
+            // Act
+            await consumer.settleBets(finishDraw);
+
+            // Assert
+            expect(consumer.callEndGame).toHaveBeenCalledTimes(2);
+            expect(consumer.captureBetResult).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    describe("callEndGame", () => {
+        const mockDate = new Date();
+        const bet = {
+            uid: "testUser123",
+            amount: 100,
+            choice: "player",
+        };
+        const roundId = chance.natural();
+        const betResult = { totalWin: 100 };
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+            consumer.formatEndGameInfo = jest.fn().mockReturnValue({
+                gameInfo: { amount: 100 },
+                settlementInfo: { win: 100 },
+            });
+            consumer.userBetResultPublisher = userBetResultPublisher;
+            endGame.mockReset();
+        });
+
+        it("should call endGame with formatted info and return success result", async () => {
+            // Arrange
+            const successResult = { isOk: true };
+            endGame.mockResolvedValue(successResult);
+
+            // Act
+            const result = await consumer.callEndGame(bet, roundId, mockDate, betResult);
+
+            // Assert
+            expect(consumer.formatEndGameInfo).toHaveBeenCalledWith(bet, roundId, mockDate, betResult);
+            expect(endGame).toHaveBeenCalledWith(bet.uid, { amount: 100 }, { win: 100 });
+            expect(result).toBe(successResult);
+        });
+
+        it("should handle API error and publish error message", async () => {
+            // Arrange
+            const apiError = { isOk: false, response: "API Error" };
+            endGame.mockResolvedValue(apiError);
+
+            // Act
+            const result = await consumer.callEndGame(bet, roundId, mockDate, betResult);
+
+            // Assert
+            expect(userBetResultPublisher.publishApiError).toHaveBeenCalledWith(bet.uid, apiError.response);
+            expect(result).toBe(apiError);
+        });
     });
 
     describe("isFirstDrawOfRound", () => {

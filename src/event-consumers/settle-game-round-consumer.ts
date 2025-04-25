@@ -89,7 +89,7 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
                     bet.paid = true;
 
                     await bet.save();
-                    const endGameResult = (await this.callEndGame(bet, finishDraw.drawId, finishDraw.time, betResult)) as any;
+                    const endGameResult = await this.callEndGame(bet, finishDraw.drawId, finishDraw.time, betResult);
 
                     this.captureBetResult(bet.uid, betResult, bet.rate);
                     if (endGameResult.isOk) {
@@ -98,6 +98,18 @@ export class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGam
                 })
             );
         }
+    }
+
+    async callEndGame(bet: any, roundId: number, time: Date, betResult: any) {
+        const { gameInfo, settlementInfo } = this.formatEndGameInfo(bet, roundId, time, betResult);
+
+        const apiResult = await this.endGame(bet.uid, gameInfo, settlementInfo);
+
+        if (!apiResult.isOk) {
+            this.userBetResultPublisher.publishApiError(bet.uid, apiResult.response);
+        }
+
+        return apiResult;
     }
 
     isLastDrawOfRound(drawId: number): boolean {
