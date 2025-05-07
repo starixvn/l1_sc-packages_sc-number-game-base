@@ -132,7 +132,7 @@ export default class PlaceBetConsumer extends BaseEventConsumers.PlaceBetConsume
 
     consume(player: any, payload: BetPayload): void {
         Object.keys(payload.betChoices).forEach((choice) => {
-            const value = payload.betChoices[choice] >> 0;
+            const value = Number(payload.betChoices[choice]);
             payload.betChoices[choice] = value;
         });
 
