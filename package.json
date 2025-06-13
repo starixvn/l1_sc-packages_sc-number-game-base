@@ -1,7 +1,7 @@
 {
     "name": "sc-number-game-base",
-    "version": "1.1.3-beta.2",
-    "description": "The codebase of number games",
+    "version": "1.1.4-hotdog",
+    "description": "The codebase of number games that supports hotdog",
     "type": "module",
     "types": "dist/index.d.ts",
     "main": "dist/index.js",
